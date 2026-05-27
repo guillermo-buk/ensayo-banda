@@ -269,7 +269,7 @@ let db={canciones:[],sesiones:[],pendientes:[]};
 let currentWho='todos';
 
 const SUPA_URL='https://qwmvqalskbwmbausjxan.supabase.co';
-const SUPA_KEY='sb_publishable_sKWuQU821_KYirPaJzJu6Q_910it2E3';
+const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF3bXZxYWxza2J3bWJhdXNqeGFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk5MDQyMDgsImV4cCI6MjA5NTQ4MDIwOH0.7ibWgHjkjAWl_TXq20WXTVKw0AtqAQlHgozFYhffj0s';
 const supa=supabase.createClient(SUPA_URL,SUPA_KEY);
 
 function uid(){return Math.random().toString(36).slice(2)+Date.now().toString(36);}
@@ -819,7 +819,8 @@ function animateTP(){
   tpAnim=requestAnimationFrame(animateTP);
 }
 
-document.getElementById('tp-stage').addEventListener('click',function(e){
+const tpStage=document.getElementById('tp-stage');
+if(tpStage)tpStage.addEventListener('click',function(e){
   if(e.target.classList.contains('tp-close'))return;
   togglePlay();
 });
