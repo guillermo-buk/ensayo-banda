@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ensayos</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#0e0e10;--bg2:#16161a;--bg3:#1e1e24;--bg4:#252530;--surface:#2a2a35;--surface2:#32323f;
+  --text:#ffffff;--text2:#c8c7d4;--text3:#8887a0;
+  --accent:#c8f060;--accent2:#8b5cf6;--accent3:#f97316;
+  --border:rgba(255,255,255,0.12);--border2:rgba(255,255,255,0.22);
+  --radius:6px;--radius-lg:10px;--radius-xl:16px;
+  --font-head:'Syne',sans-serif;--font-body:'DM Mono',monospace;
+}
+body{font-family:var(--font-body);background:var(--bg);color:var(--text);font-size:13px;line-height:1.6;min-height:100vh;}
+::selection{background:var(--accent);color:#0e0e10;}
+input,textarea,select{font-family:var(--font-body);}
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-track{background:var(--bg2);}
+::-webkit-scrollbar-thumb{background:var(--surface2);border-radius:4px;}
+
+.app{max-width:800px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;}
+.app-header{padding:1.5rem 1.5rem 0;display:flex;align-items:flex-start;justify-content:space-between;}
+.app-logo{font-family:var(--font-head);font-size:28px;font-weight:800;letter-spacing:-0.03em;line-height:1;}
+.app-logo span{color:var(--accent);}
+.app-sub{font-size:11px;color:var(--text3);margin-top:4px;letter-spacing:0.05em;text-transform:uppercase;}
+.local-pill{font-size:10px;background:rgba(200,240,96,0.12);color:var(--accent);padding:3px 10px;border-radius:20px;border:1px solid rgba(200,240,96,0.2);letter-spacing:0.05em;text-transform:uppercase;}
+.who-bar{display:flex;gap:6px;padding:1rem 1.5rem 0;flex-wrap:wrap;align-items:center;}
+.who-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-right:4px;}
+.who-btn{font-family:var(--font-body);font-size:11px;padding:5px 14px;border-radius:20px;border:1px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;transition:all .15s;}
+.who-btn:hover{border-color:var(--text3);color:var(--text);}
+.who-btn.active{background:var(--accent);color:#0e0e10;border-color:var(--accent);font-weight:500;}
+.main-nav{display:flex;padding:1.25rem 1.5rem 0;border-bottom:1px solid var(--border);margin-top:1rem;}
+.nav-tab{font-family:var(--font-head);font-size:13px;font-weight:600;padding:8px 0;margin-right:28px;cursor:pointer;border:none;background:none;color:var(--text2);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;}
+.nav-tab:hover{color:var(--text);}
+.nav-tab.active{color:var(--text);border-bottom-color:var(--accent);}
+.main{padding:1.25rem 1.5rem 5rem;flex:1;}
+.section{display:none;}.section.active{display:block;}
+
+/* SONG CARD */
+.song-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-xl);margin-bottom:10px;overflow:hidden;transition:border-color .15s;}
+.song-card:hover{border-color:var(--border2);}
+.song-card-header{display:flex;align-items:center;gap:10px;padding:14px 18px;cursor:pointer;user-select:none;}
+.song-number{font-size:10px;color:var(--text3);min-width:20px;text-align:right;}
+.song-title{font-family:var(--font-head);font-size:16px;font-weight:700;flex:1;letter-spacing:-0.01em;}
+.song-badges{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+.badge{font-size:10px;padding:2px 8px;border-radius:4px;font-family:var(--font-body);}
+.badge-key{background:rgba(139,92,246,0.2);color:#c4b5fd;border:1px solid rgba(139,92,246,0.3);}
+.badge-bpm{background:var(--bg4);color:var(--text3);border:1px solid var(--border);}
+.badge-ok{background:rgba(200,240,96,0.15);color:var(--accent);border:1px solid rgba(200,240,96,0.25);}
+.badge-wip{background:rgba(249,115,22,0.15);color:#fdba74;border:1px solid rgba(249,115,22,0.25);}
+.song-chevron{color:var(--text3);font-size:10px;transition:transform .2s;}
+.song-chevron.open{transform:rotate(180deg);}
+.song-body{display:none;border-top:1px solid var(--border);}
+.song-body.open{display:block;}
+.song-tabs{display:flex;padding:0 18px;border-bottom:1px solid var(--border);background:var(--bg3);overflow-x:auto;gap:0;}
+.song-tab{font-size:11px;font-weight:500;padding:9px 14px;cursor:pointer;border:none;background:none;color:var(--text2);border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;transition:all .15s;font-family:var(--font-body);}
+.song-tab:hover{color:var(--text);}
+.song-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.song-tab-content{padding:18px;}
+.stab-panel{display:none;}.stab-panel.active{display:block;}
+
+/* INPUTS */
+input,textarea,select{width:100%;font-size:12px;padding:8px 10px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg3);color:var(--text);transition:border-color .15s;}
+textarea{resize:vertical;min-height:52px;}
+input:focus,textarea:focus,select:focus{outline:none;border-color:rgba(200,240,96,0.4);background:var(--bg4);}
+input::placeholder,textarea::placeholder{color:var(--text2);}
+select option{background:var(--bg3);}
+
+/* BUTTONS */
+.btn-primary{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:8px 18px;border:none;border-radius:var(--radius);background:var(--accent);color:#0e0e10;cursor:pointer;font-family:var(--font-body);font-weight:500;transition:all .15s;}
+.btn-primary:hover{background:#d4f570;transform:translateY(-1px);}
+.btn-primary.sm{font-size:11px;padding:5px 12px;}
+.btn-ghost{display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:7px 14px;border:1px solid var(--border2);border-radius:var(--radius);background:transparent;color:var(--text2);cursor:pointer;font-family:var(--font-body);transition:all .15s;margin-top:8px;}
+.btn-ghost:hover{background:var(--bg4);color:var(--text);}
+.btn-ghost.sm{font-size:11px;padding:4px 10px;margin-top:0;}
+.btn-ghost.danger{color:#f87171;border-color:rgba(248,113,113,0.3);}
+.btn-ghost.danger:hover{background:rgba(248,113,113,0.1);}
+.row-gap{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.grid21{display:grid;grid-template-columns:1fr 80px;gap:8px;}
+.grid3{display:grid;grid-template-columns:1fr 100px 80px;gap:8px;}
+.field-label{font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px;}
+.form-field{display:flex;flex-direction:column;gap:4px;}
+.sub-form{background:var(--bg3);border-radius:var(--radius-lg);padding:14px;margin:8px 0;border:1px solid var(--border);display:grid;gap:10px;}
+.hint{font-size:11px;color:var(--text2);line-height:1.5;}
+.hint code{font-family:var(--font-body);background:var(--bg4);padding:1px 6px;border-radius:3px;color:var(--accent);}
+.slabel{font-size:10px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:0.08em;margin:16px 0 8px;display:flex;align-items:center;gap:8px;}
+.slabel::after{content:'';flex:1;height:1px;background:var(--border);}
+.section-add-area{margin-top:16px;padding-top:16px;border-top:1px dashed var(--border);}
+.empty{text-align:center;color:var(--text3);padding:3rem 1rem;font-size:13px;}
+.empty-icon{font-size:32px;margin-bottom:12px;opacity:.4;}
+
+/* CIFRADO */
+.cifrado-wrap{font-family:var(--font-body);font-size:14px;line-height:3.2;background:var(--bg3);border-radius:var(--radius-lg);padding:16px;min-height:60px;border:1px solid var(--border);}
+.cifrado-empty{font-size:11px;color:var(--text3);}
+.cifrado-line{display:flex;flex-wrap:wrap;align-items:baseline;margin-bottom:4px;}
+.cword{position:relative;display:inline-block;margin-right:7px;}
+.cchord{position:absolute;top:-20px;left:0;font-size:11px;font-weight:500;color:var(--accent);white-space:nowrap;}
+
+/* INLINE CHORD EDITOR */
+.lyric-editor-area{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;}
+.lyric-editor-toolbar{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);background:var(--bg4);flex-wrap:wrap;}
+.lyric-editor-toolbar span{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;}
+.chord-pill-insert{font-size:11px;padding:3px 10px;border-radius:20px;border:1px solid rgba(200,240,96,0.3);background:rgba(200,240,96,0.08);color:var(--accent);cursor:pointer;font-family:var(--font-body);transition:all .15s;}
+.chord-pill-insert:hover{background:rgba(200,240,96,0.18);}
+.chord-input-add{width:80px;font-size:11px;padding:4px 8px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg3);color:var(--text);}
+.lyric-editor-main{display:grid;grid-template-columns:1fr 1fr;min-height:180px;}
+.lyric-raw{width:100%;min-height:180px;border:none;border-right:1px solid var(--border);border-radius:0;background:transparent;color:var(--text);font-size:13px;padding:14px;resize:none;font-family:var(--font-body);line-height:2.8;}
+.lyric-raw:focus{outline:none;background:rgba(200,240,96,0.02);}
+.lyric-preview-pane{padding:14px;overflow-y:auto;}
+.lyric-preview-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px;}
+
+/* BLOQUE */
+.bloque{margin-bottom:20px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;}
+.bloque-header{display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--bg4);border-bottom:1px solid var(--border);}
+.bloque-name{font-family:var(--font-head);font-size:12px;font-weight:700;color:var(--text);letter-spacing:.02em;}
+.bloque-rep{font-size:10px;color:var(--text3);}
+.bloque-actions{display:flex;gap:4px;margin-left:auto;}
+.bloque-body{padding:14px;}
+
+/* ACORDES */
+.acordes-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;}
+.acorde-chip{background:var(--bg4);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:12px 8px;text-align:center;}
+.acorde-chip .chord-name{font-family:var(--font-head);font-size:20px;font-weight:800;color:var(--accent);letter-spacing:-0.02em;}
+.acorde-chip .chord-ctx{font-size:10px;color:var(--text3);margin-top:3px;}
+
+/* PEDALES */
+.pedal-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:6px;margin-bottom:12px;}
+.pedal-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:var(--radius);border:1px solid var(--border);cursor:pointer;transition:all .15s;user-select:none;}
+.pedal-item:hover{border-color:rgba(139,92,246,0.4);background:rgba(139,92,246,0.05);}
+.pedal-item.on{background:rgba(139,92,246,0.15);border-color:rgba(139,92,246,0.4);}
+.pedal-check{width:14px;height:14px;border-radius:3px;border:1.5px solid var(--border2);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;transition:all .15s;}
+.pedal-item.on .pedal-check{background:var(--accent2);border-color:var(--accent2);color:#fff;}
+.pedal-label{font-size:12px;color:var(--text);}
+.pedal-item.on .pedal-label{color:var(--text);}
+.pedal-notas{margin-top:10px;}
+
+/* BKIT */
+.capsula-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:4px;}
+.capsula-item{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 14px;border-radius:var(--radius-lg);border:1px solid var(--border2);cursor:pointer;transition:all .15s;min-width:72px;background:var(--bg4);}
+.capsula-item:hover{border-color:rgba(200,240,96,0.35);background:rgba(200,240,96,0.05);}
+.capsula-item.on{background:rgba(200,240,96,0.15);border-color:rgba(200,240,96,0.5);}
+.capsula-item.on span{color:var(--accent);}
+.capsula-icon{font-size:18px;line-height:1;color:var(--text3);}
+.capsula-item.on .capsula-icon{color:var(--accent);}
+.capsula-item span{font-size:10px;color:var(--text2);white-space:nowrap;}
+.bkit-item{background:var(--bg4);border-radius:var(--radius-lg);padding:10px;border:1px solid var(--border);}
+.bkit-label{font-size:10px;color:#ffb380;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;font-weight:500;}
+.bkit-item textarea{min-height:40px;font-size:11px;background:var(--bg3);}
+
+/* MEMBER */
+.member-box{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px;margin-bottom:8px;}
+.member-box-title{font-size:12px;font-weight:500;color:var(--text);margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.member-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.dot-gv{background:#8b5cf6;}.dot-g1{background:#f97316;}.dot-bat{background:#ef4444;}.dot-bas{background:#06b6d4;}
+
+/* SESIONES */
+.sesion-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-xl);padding:16px 18px;margin-bottom:10px;}
+.sesion-date{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;}
+.sesion-title{font-family:var(--font-head);font-size:15px;font-weight:700;margin-bottom:8px;}
+.sesion-notas{font-size:12px;color:var(--text);margin-bottom:10px;}
+.links-row{display:flex;flex-wrap:wrap;gap:6px;}
+.link-btn{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--accent);text-decoration:none;padding:6px 12px;border:1px solid rgba(200,240,96,0.25);border-radius:var(--radius);background:rgba(200,240,96,0.05);transition:all .15s;}
+.link-btn:hover{background:rgba(200,240,96,0.12);}
+
+/* PENDIENTES */
+.pend-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-xl);padding:4px 18px;margin-bottom:10px;}
+.pend-item{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);}
+.pend-item:last-child{border-bottom:none;}
+.check-box{width:18px;height:18px;border:1.5px solid var(--border2);border-radius:4px;flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-top:2px;font-size:10px;color:var(--accent);transition:all .15s;}
+.check-box.done{background:rgba(200,240,96,0.15);border-color:rgba(200,240,96,0.4);}
+.pend-texto{font-size:13px;}.pend-texto.done{text-decoration:line-through;color:var(--text3);}
+.pend-quien{font-size:11px;color:var(--text3);margin-top:3px;}
+
+/* ── TELEPROMPTER ── */
+.tp-overlay{display:none;position:fixed;inset:0;background:#000;z-index:1000;flex-direction:column;}
+.tp-overlay.active{display:flex;}
+.tp-header{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:1px solid rgba(255,255,255,.1);flex-shrink:0;}
+.tp-song-name{font-family:var(--font-head);font-size:18px;font-weight:700;color:#fff;}
+.tp-controls{display:flex;align-items:center;gap:12px;}
+.tp-speed-label{font-size:11px;color:rgba(255,255,255,.4);}
+.tp-speed{width:90px;}
+.tp-btn{font-family:var(--font-body);font-size:12px;padding:7px 16px;border-radius:var(--radius);border:1px solid rgba(255,255,255,.2);background:transparent;color:#fff;cursor:pointer;transition:all .15s;}
+.tp-btn:hover{background:rgba(255,255,255,.1);}
+.tp-btn.play{background:var(--accent);color:#000;border-color:var(--accent);font-weight:500;}
+.tp-btn.play:hover{background:#d4f570;}
+.tp-close{font-size:18px;background:none;border:none;color:rgba(255,255,255,.4);cursor:pointer;padding:4px 8px;}
+.tp-close:hover{color:#fff;}
+.tp-stage{flex:1;overflow:hidden;position:relative;}
+.tp-scroll-area{position:absolute;width:100%;padding:60px 10% 80vh;transition:none;}
+.tp-bloque-name{font-family:var(--font-head);font-size:14px;font-weight:700;color:rgba(200,240,96,.5);text-transform:uppercase;letter-spacing:.1em;margin-bottom:24px;margin-top:40px;}
+.tp-bloque-name:first-child{margin-top:0;}
+.tp-line{display:flex;flex-wrap:wrap;align-items:baseline;margin-bottom:32px;}
+.tp-word{position:relative;display:inline-block;margin-right:12px;font-size:28px;color:#ffffff;line-height:1;}
+.tp-chord{position:absolute;top:-28px;left:0;font-size:16px;font-weight:600;color:var(--accent);white-space:nowrap;font-family:var(--font-head);}
+.tp-progress{position:absolute;bottom:0;left:0;height:3px;background:var(--accent);width:0%;transition:width .5s;}
+
+@media(max-width:520px){
+  .grid2,.bkit-grid,.grid3,.grid21{grid-template-columns:1fr;}
+  .lyric-editor-main{grid-template-columns:1fr;}
+  .lyric-raw{border-right:none;border-bottom:1px solid var(--border);}
+  .pedal-list{grid-template-columns:1fr 1fr;}
+  .tp-word{font-size:20px;}
+  .tp-chord{font-size:13px;top:-22px;}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="app-header">
+    <div>
+      <div class="app-logo">En<span>sayos</span></div>
+      <div class="app-sub">La banda</div>
+    </div>
+    <span class="local-pill">● en línea</span>
+  </div>
+  <div class="who-bar">
+    <span class="who-label">Soy:</span>
+    <button class="who-btn" onclick="setWho('todos')" id="who-todos">Todos</button>
+    <button class="who-btn" onclick="setWho('Vocal Guit')" id="who-VocalGuit">Vocal Guit</button>
+    <button class="who-btn" onclick="setWho('Guit 1era')" id="who-Guit1era">Guit 1era</button>
+    <button class="who-btn" onclick="setWho('Batería')" id="who-Bateria">Batería</button>
+    <button class="who-btn" onclick="setWho('Bass')" id="who-Bass">Bass</button>
+  </div>
+  <nav class="main-nav">
+    <button class="nav-tab active" onclick="showTab('canciones')">Canciones</button>
+    <button class="nav-tab" onclick="showTab('sesiones')">Sesiones</button>
+    <button class="nav-tab" onclick="showTab('pendientes')">Pendientes</button>
+  </nav>
+  <div class="main">
+    <div id="tab-canciones" class="section active"></div>
+    <div id="tab-sesiones" class="section"></div>
+    <div id="tab-pendientes" class="section"></div>
+  </div>
+</div>
+
+<!-- TELEPROMPTER OVERLAY -->
+<div class="tp-overlay" id="tp-overlay">
+  <div class="tp-header">
+    <div class="tp-song-name" id="tp-title">—</div>
+    <div class="tp-controls">
+      <span class="tp-speed-label">Velocidad</span>
+      <input type="range" class="tp-speed" id="tp-speed" min="10" max="120" value="35" step="5" oninput="updateSpeed()">
+      <button class="tp-btn play" id="tp-playbtn" onclick="togglePlay()">▶ Play</button>
+      <button class="tp-btn" onclick="resetTP()">↺ Inicio</button>
+      <button class="tp-close" onclick="closeTP()">✕</button>
+    </div>
+  </div>
+  <div class="tp-stage">
+    <div class="tp-scroll-area" id="tp-content"></div>
+    <div class="tp-progress" id="tp-progress"></div>
+  </div>
+</div>
+
+<script>
+const PEDAL_LIST=['Compresor','Acoustic Simulator','Groove OD','Hot Tube','Flanger','Tremolo','Chorus','Phaser','Delay','Reverb','Octabador','Loop 360'];
+const PEDAL_VOCAL=['Compresor','Distorsión','Reverb','Delay'];
+const CAPSULAS_VOCAL=['Neck','Bridge','Mid'];
+const CAPSULAS_G1=['Neck','Bridge','Mid','Mod Gilmour'];
+const BKIT_FIELDS=[['intro','Intro / fill entrada'],['groove','Groove principal'],['fill_pre_coro','Fill pre-coro'],['coro','Dinámica de coro'],['puente','Puente / break'],['redoble','Redobles / ornamentos'],['cierre','Cierre / final']];
+const TAB_LABELS={'cifrado':'📄 Letra + Cifrado','acordes':'🎵 Acordes','mi-parte':'Mi parte','vocal-guit':'Vocal Guit','guit-1era':'Guit 1era','bateria':'Batería','bass':'Bass','general':'General'};
+
+let db={canciones:[],sesiones:[],pendientes:[]};
+let currentWho='todos';
+
+const SUPA_URL='https://qwmvqalskbwmbausjxan.supabase.co';
+const SUPA_KEY='sb_publishable_sKWuQU821_KYirPaJzJu6Q_910it2E3';
+const supa=supabase.createClient(SUPA_URL,SUPA_KEY);
+
+function uid(){return Math.random().toString(36).slice(2)+Date.now().toString(36);}
+function esc(s){if(s==null)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+async function loadAll(){
+  const[c,s,p]=await Promise.all([
+    supa.from('canciones').select('*').order('created_at'),
+    supa.from('sesiones').select('*').order('fecha',{ascending:false}),
+    supa.from('pendientes').select('*').order('created_at')
+  ]);
+  if(c.data)db.canciones=c.data;
+  if(s.data)db.sesiones=s.data;
+  if(p.data)db.pendientes=p.data;
+  renderAll();
+  showLoading(false);
+}
+
+function renderAll(){renderCanciones();renderSesiones();renderPendientes();}
+
+function showLoading(on){
+  let el=document.getElementById('loading-overlay');
+  if(on&&!el){
+    el=document.createElement('div');
+    el.id='loading-overlay';
+    el.style.cssText='position:fixed;inset:0;background:#0e0e10;display:flex;align-items:center;justify-content:center;z-index:9999;font-family:var(--font-head);font-size:18px;color:#c8f060;letter-spacing:0.05em;';
+    el.textContent='Cargando...';
+    document.body.appendChild(el);
+  } else if(!on&&el){el.remove();}
+}
+
+function subscribeRealtime(){
+  supa.channel('db-changes')
+    .on('postgres_changes',{event:'*',schema:'public',table:'canciones'},async()=>{
+      const{data}=await supa.from('canciones').select('*').order('created_at');
+      if(data){db.canciones=data;renderCanciones();}
+    })
+    .on('postgres_changes',{event:'*',schema:'public',table:'sesiones'},async()=>{
+      const{data}=await supa.from('sesiones').select('*').order('fecha',{ascending:false});
+      if(data){db.sesiones=data;renderSesiones();}
+    })
+    .on('postgres_changes',{event:'*',schema:'public',table:'pendientes'},async()=>{
+      const{data}=await supa.from('pendientes').select('*').order('created_at');
+      if(data){db.pendientes=data;renderPendientes();}
+    })
+    .subscribe();
+}
+
+// ── WHO ──
+function setWho(who){
+  currentWho=who;
+  document.querySelectorAll('.who-btn').forEach(b=>b.classList.remove('active'));
+  const keyMap={'todos':'who-todos','Vocal Guit':'who-VocalGuit','Guit 1era':'who-Guit1era','Batería':'who-Bateria','Bass':'who-Bass'};
+  const btn=document.getElementById(keyMap[who]);
+  if(btn)btn.classList.add('active');
+  renderCanciones();
+}
+
+function showTab(name){
+  document.querySelectorAll('.nav-tab').forEach((t,i)=>t.classList.toggle('active',['canciones','sesiones','pendientes'][i]===name));
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+}
+
+function getSongTabs(){
+  if(currentWho==='todos') return['cifrado','acordes','vocal-guit','guit-1era','bateria','bass','general'];
+  if(currentWho==='Vocal Guit'||currentWho==='Guit 1era') return['cifrado','acordes','mi-parte','general'];
+  if(currentWho==='Batería') return['cifrado','acordes','mi-parte','general'];
+  if(currentWho==='Bass') return['cifrado','acordes','mi-parte','general'];
+  return['cifrado','acordes','mi-parte','general'];
+}
+
+function showSongTab(ci,tabId){
+  document.querySelectorAll('.stab-'+ci).forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.stab-panel-'+ci).forEach(p=>p.classList.remove('active'));
+  const tb=document.getElementById('stab-'+ci+'-'+tabId);
+  const pn=document.getElementById('spanel-'+ci+'-'+tabId);
+  if(tb)tb.classList.add('active');
+  if(pn)pn.classList.add('active');
+}
+
+// ── CIFRADO RENDER ──
+function renderCifradoHtml(raw){
+  if(!raw||!raw.trim())return'<span class="cifrado-empty">Sin cifrado. Usá el editor de abajo.</span>';
+  return raw.split('\n').map(line=>{
+    if(!line.trim())return'<div style="height:6px;"></div>';
+    return'<div class="cifrado-line">'+line.split(' ').map(w=>{
+      const p=w.split('|');
+      if(p.length>=2)return`<span class="cword"><span class="cchord">${esc(p[0])}</span>${esc(p.slice(1).join('|'))} </span>`;
+      return`<span class="cword">${esc(w)} </span>`;
+    }).join('')+'</div>';
+  }).join('');
+}
+
+function extractChords(bloques){
+  const found=new Set();const ctx={};
+  (bloques||[]).forEach(b=>{
+    (b.cifrado||'').split('\n').forEach(line=>{
+      line.split(' ').forEach(w=>{
+        const p=w.split('|');
+        if(p.length>=2&&p[0].trim()){const ch=p[0].trim();found.add(ch);if(!ctx[ch])ctx[ch]=[];if(!ctx[ch].includes(b.nombre))ctx[ch].push(b.nombre);}
+      });
+    });
+  });
+  return{chords:[...found],ctx};
+}
+
+// ── PANEL BUILDERS ──
+function buildCifradoPanel(c,ci){
+  const bloques=c.bloques||[];
+  let html=`<div class="row-gap" style="margin-bottom:16px;">
+    <button class="btn-primary sm" onclick="openTP(${ci})">▶ Teleprompter</button>
+    <span style="font-size:11px;color:var(--text3);">Modo pantalla completa con scroll automático</span>
+  </div>`;
+  html+='<div class="slabel">Bloques</div>';
+  if(!bloques.length) html+='<div class="empty" style="padding:1.5rem 0;"><div class="empty-icon">🎼</div>Sin bloques. Agregá uno abajo.</div>';
+  bloques.forEach((b,bi)=>{
+    html+=`<div class="bloque">
+      <div class="bloque-header">
+        <span class="bloque-name">${esc(b.nombre)}</span>
+        ${b.rep?`<span class="bloque-rep">&nbsp;×${b.rep}</span>`:''}
+        <div class="bloque-actions">
+          <button class="btn-ghost sm" onclick="toggleBloqueEdit(${ci},${bi})">✏ editar</button>
+          <button class="btn-ghost sm danger" onclick="deleteBloque(${ci},${bi})">✕</button>
+        </div>
+      </div>
+      <div class="bloque-body">
+        <div class="cifrado-wrap" id="cif-render-${ci}-${bi}">${renderCifradoHtml(b.cifrado||'')}</div>
+        <div id="cif-edit-area-${ci}-${bi}" style="display:none;margin-top:10px;">
+          ${buildLyricEditor(b.cifrado||'',ci,bi)}
+        </div>
+      </div>
+    </div>`;
+  });
+  html+=`<button class="btn-ghost" onclick="toggleAddBloque(${ci})">+ Agregar bloque</button>
+  <div id="add-bloque-${ci}" style="display:none;margin-top:10px;" class="sub-form">
+    <div class="grid21">
+      <div class="form-field"><div class="field-label">Nombre del bloque</div><input id="bl-n-${ci}" placeholder="Intro, Verso, Coro..."></div>
+      <div class="form-field"><div class="field-label">Repeticiones</div><input id="bl-r-${ci}" type="number" placeholder="1"></div>
+    </div>
+    <div class="form-field">
+      <div class="field-label">Letra (después le agregás acordes)</div>
+      <textarea id="bl-letra-${ci}" placeholder="Escribí la letra aquí, una frase por línea..." style="min-height:80px;"></textarea>
+    </div>
+    <div class="row-gap">
+      <button class="btn-primary sm" onclick="saveBloque(${ci})">Agregar bloque</button>
+      <button class="btn-ghost sm" onclick="document.getElementById('add-bloque-${ci}').style.display='none'">Cancelar</button>
+    </div>
+  </div>`;
+  return html;
+}
+
+function buildLyricEditor(raw,ci,bi){
+  // Build toolbar with quick chord buttons
+  const commonChords=['Am','Em','G','C','D','F','E','Dm','A','Bm','C#m','F#m'];
+  const chordBtns=commonChords.map(ch=>`<button class="chord-pill-insert" onclick="insertChord('lyric-raw-${ci}-${bi}','${ch}')">${ch}</button>`).join('');
+  return`<div class="lyric-editor-area">
+    <div class="lyric-editor-toolbar">
+      <span>Insertar acorde:</span>
+      ${chordBtns}
+      <input class="chord-input-add" id="custom-chord-${ci}-${bi}" placeholder="Otro..." onkeydown="if(event.key==='Enter'){insertChord('lyric-raw-${ci}-${bi}',this.value.trim());this.value='';}">
+    </div>
+    <div class="lyric-editor-main">
+      <textarea class="lyric-raw" id="lyric-raw-${ci}-${bi}" placeholder="Escribí o pegá la letra. Seleccioná una palabra y hacé clic en un acorde para insertarlo."
+        oninput="updateLyricPreview(${ci},${bi})">${esc(raw)}</textarea>
+      <div class="lyric-preview-pane">
+        <div class="lyric-preview-label">Vista previa</div>
+        <div id="lyric-preview-${ci}-${bi}">${renderCifradoHtml(raw)}</div>
+      </div>
+    </div>
+    <div style="padding:10px 14px;border-top:1px solid var(--border);display:flex;gap:8px;">
+      <button class="btn-primary sm" onclick="saveLyricEdit(${ci},${bi})">Guardar</button>
+      <button class="btn-ghost sm" onclick="toggleBloqueEdit(${ci},${bi})">Cancelar</button>
+      <span class="hint" style="align-self:center;">Seleccioná texto → clic en acorde para insertar sobre esa palabra</span>
+    </div>
+  </div>`;
+}
+
+function insertChord(textareaId, chord){
+  if(!chord)return;
+  const ta=document.getElementById(textareaId);
+  if(!ta)return;
+  const start=ta.selectionStart, end=ta.selectionEnd;
+  const val=ta.value;
+  const selectedText=val.substring(start,end);
+  if(selectedText.trim()){
+    // Replace selection: wrap first word with chord
+    const words=selectedText.split(' ');
+    const firstWord=words[0];
+    const rest=words.slice(1).join(' ');
+    // Check if already has a chord
+    const clean=firstWord.replace(/^[^|]+\|/,'');
+    const newText=chord+'|'+clean+(rest?' '+rest:'');
+    ta.value=val.substring(0,start)+newText+val.substring(end);
+    ta.selectionStart=start;
+    ta.selectionEnd=start+newText.length;
+  } else {
+    // Insert at cursor
+    const ins=chord+'|';
+    ta.value=val.substring(0,start)+ins+val.substring(end);
+    ta.selectionStart=ta.selectionEnd=start+ins.length;
+  }
+  ta.focus();
+  updateLyricPreview(parseInt(textareaId.split('-')[2]),parseInt(textareaId.split('-')[3]));
+}
+
+function updateLyricPreview(ci,bi){
+  const ta=document.getElementById('lyric-raw-'+ci+'-'+bi);
+  const prev=document.getElementById('lyric-preview-'+ci+'-'+bi);
+  if(ta&&prev)prev.innerHTML=renderCifradoHtml(ta.value);
+}
+
+async function saveLyricEdit(ci,bi){
+  const ta=document.getElementById('lyric-raw-'+ci+'-'+bi);
+  if(!ta)return;
+  db.canciones[ci].bloques[bi].cifrado=ta.value;
+  await supa.from('canciones').update({bloques:db.canciones[ci].bloques}).eq('id',db.canciones[ci].id);
+  renderCanciones();reopenSong(ci,'cifrado');
+}
+
+function toggleBloqueEdit(ci,bi){
+  const area=document.getElementById('cif-edit-area-'+ci+'-'+bi);
+  if(!area)return;
+  area.style.display=area.style.display==='none'?'block':'none';
+}
+
+function buildAcordesPanel(c){
+  const{chords,ctx}=extractChords(c.bloques||[]);
+  if(!chords.length) return'<div class="empty" style="padding:2rem 0;"><div class="empty-icon">🎵</div>Los acordes aparecen aquí automáticamente una vez que los cargues en "Letra + Cifrado".</div>';
+  return`<div class="slabel">Acordes usados en la canción</div>
+    <div class="acordes-grid">
+      ${chords.map(ch=>`<div class="acorde-chip"><div class="chord-name">${esc(ch)}</div><div class="chord-ctx">${esc((ctx[ch]||[]).join(', '))}</div></div>`).join('')}
+    </div>`;
+}
+
+function buildVocalPanel(c,ci){
+  const notas=c.notas||{};
+  const VOC_FIELDS=[
+    ['voc_tono','Tono / rango','Ej: voz de pecho, registro medio, falset en el puente...'],
+    ['voc_dinamica','Dinámica','Suave en el verso, fuerte en el coro, crescendo...'],
+    ['voc_armonias','Armonías / coros','Terceras, quintas, quién acompaña...'],
+    ['voc_feeling','Feeling / expresión','Emoción, actitud, referencia de artista...'],
+  ];
+  const fieldsHtml=VOC_FIELDS.map(([k,label,ph])=>`
+    <div class="bkit-item">
+      <div class="bkit-label">${label}</div>
+      <textarea placeholder="${ph}" onblur="saveNota(${ci},'${k}',this.value)">${esc(notas[k]||'')}</textarea>
+    </div>`).join('');
+  const capsulaActual=notas['vg_capsula']||'';
+  const capsulaHtml=CAPSULAS_VOCAL.map(cap=>`
+    <div class="capsula-item${capsulaActual===cap?' on':''}" onclick="saveCapsula(${ci},'vg_capsula','${cap}',this)">
+      <div class="capsula-icon">${cap==='Neck'?'◀':cap==='Bridge'?'▶':cap==='Mid'?'◆':'★'}</div>
+      <span>${cap}</span>
+    </div>`).join('');
+  return`<div class="member-box">
+    <div class="member-box-title"><span class="member-dot dot-gv"></span>Vocal Guit — Voz</div>
+    <div class="bkit-grid">${fieldsHtml}</div>
+    <div class="slabel">Guitarra — posición de cápsula</div>
+    <div class="capsula-row">${capsulaHtml}</div>
+    <div class="slabel">Guitarra — pedales activos</div>
+    ${buildPedalChecklist(c,ci,'Vocal Guit',PEDAL_VOCAL)}
+    <div class="slabel">Notas de guitarra</div>
+    <textarea placeholder="Técnica, posición, variaciones..." onblur="saveNota(${ci},'Vocal Guit',this.value)">${esc(notas['Vocal Guit']||'')}</textarea>
+  </div>`;
+}
+
+function buildPedalChecklist(c,ci,member,list){
+  const src=list||PEDAL_LIST;
+  const activePedals=(c.pedales&&c.pedales[member])||[];
+  const items=src.map(p=>{
+    const on=activePedals.includes(p);
+    return`<div class="pedal-item${on?' on':''}" onclick="togglePedal(${ci},'${esc(member)}','${esc(p)}')">
+      <div class="pedal-check">${on?'✓':''}</div>
+      <span class="pedal-label">${esc(p)}</span>
+    </div>`;
+  }).join('');
+  return`<div class="pedal-list">${items}</div>`;
+}
+
+function buildGuitPanel(c,ci,member){
+  const notas=c.notas||{};
+  const capKey='g1_capsula';
+  const capsulaActual=notas[capKey]||'';
+  const capsulaHtml=CAPSULAS_G1.map(cap=>`
+    <div class="capsula-item${capsulaActual===cap?' on':''}" onclick="saveCapsula(${ci},'${capKey}','${cap}',this)">
+      <div class="capsula-icon">${cap==='Neck'?'◀':cap==='Bridge'?'▶':cap==='Mid'?'◆':'★'}</div>
+      <span>${cap}</span>
+    </div>`).join('');
+  return`<div class="member-box">
+    <div class="member-box-title"><span class="member-dot dot-g1"></span>${esc(member)}</div>
+    <div class="slabel">Posición de cápsula</div>
+    <div class="capsula-row">${capsulaHtml}</div>
+    <div class="slabel">Pedales activos</div>
+    ${buildPedalChecklist(c,ci,member)}
+    <div class="slabel">Notas de ejecución</div>
+    <textarea placeholder="Técnica, variaciones, posición en el mástil..." onblur="saveNota(${ci},'${member}',this.value)">${esc(notas[member]||'')}</textarea>
+  </div>`;
+}
+
+function buildBatPanel(c,ci){
+  const bkit=c.bkit||{};
+  const bkitHtml=BKIT_FIELDS.map(([k,label])=>`
+    <div class="bkit-item">
+      <div class="bkit-label">${esc(label)}</div>
+      <textarea placeholder="Describí la parte..." onblur="saveBkit(${ci},'${k}',this.value)">${esc(bkit[k]||'')}</textarea>
+    </div>`).join('');
+  return`<div class="member-box">
+    <div class="member-box-title"><span class="member-dot dot-bat"></span>Batería</div>
+    <div class="bkit-grid">${bkitHtml}</div>
+    <div class="slabel">Notas generales</div>
+    <textarea placeholder="Tempo, dinámica, referencias..." onblur="saveNota(${ci},'Batería',this.value)">${esc((c.notas||{})['Batería']||'')}</textarea>
+  </div>`;
+}
+
+function buildBassPanel(c,ci){
+  return`<div class="member-box">
+    <div class="member-box-title"><span class="member-dot dot-bas"></span>Bass</div>
+    <div class="slabel">Línea de bajo</div>
+    <textarea style="min-height:70px;" placeholder="Línea principal, variaciones..." onblur="saveNota(${ci},'Bass',this.value)">${esc((c.notas||{})['Bass']||'')}</textarea>
+    <div class="slabel">Técnica y pedales</div>
+    <textarea placeholder="Técnica, efecto, pedal..." onblur="saveNota(${ci},'Bass_tec',this.value)">${esc((c.notas||{})['Bass_tec']||'')}</textarea>
+  </div>`;
+}
+
+function buildGeneralPanel(c,ci){
+  return`<div>
+    <div class="slabel">Estado</div>
+    <div class="row-gap" style="margin-bottom:16px;">
+      <button class="btn-ghost sm" onclick="toggleLista(${ci})">${c.lista?'↩ En progreso':'✓ Marcar lista'}</button>
+      <span class="badge ${c.lista?'badge-ok':'badge-wip'}">${c.lista?'Lista':'En progreso'}</span>
+    </div>
+    <div class="slabel">Notas generales</div>
+    <textarea style="min-height:70px;" placeholder="Notas generales de la canción..." onblur="saveNotaGen(${ci},this.value)">${esc(c.nota_general||'')}</textarea>
+    <div style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border);">
+      <button class="btn-ghost danger" onclick="deleteCancion(${ci})">🗑 Eliminar canción</button>
+    </div>
+  </div>`;
+}
+
+function buildPanel(c,ci,tabId){
+  if(tabId==='cifrado') return buildCifradoPanel(c,ci);
+  if(tabId==='acordes') return buildAcordesPanel(c);
+  if(tabId==='mi-parte'){
+    if(currentWho==='Vocal Guit') return buildVocalPanel(c,ci);
+    if(currentWho==='Guit 1era') return buildGuitPanel(c,ci,'Guit 1era');
+    if(currentWho==='Batería') return buildBatPanel(c,ci);
+    if(currentWho==='Bass') return buildBassPanel(c,ci);
+  }
+  if(tabId==='vocal-guit') return buildVocalPanel(c,ci);
+  if(tabId==='guit-1era') return buildGuitPanel(c,ci,'Guit 1era');
+  if(tabId==='bateria') return buildBatPanel(c,ci);
+  if(tabId==='bass') return buildBassPanel(c,ci);
+  if(tabId==='general') return buildGeneralPanel(c,ci);
+  return'';
+}
+
+// ── RENDER CANCIONES ──
+function renderCanciones(){
+  const el=document.getElementById('tab-canciones');
+  let html='';
+  if(!db.canciones.length) html='<div class="empty"><div class="empty-icon">🎸</div>Sin canciones. ¡Agregá la primera!</div>';
+  const songTabs=getSongTabs();
+  db.canciones.forEach((c,ci)=>{
+    const tabsHtml=songTabs.map(t=>`<button class="song-tab stab-${ci}${t==='cifrado'?' active':''}" id="stab-${ci}-${t}" onclick="showSongTab(${ci},'${t}')">${TAB_LABELS[t]||t}</button>`).join('');
+    const panelsHtml=songTabs.map(t=>`<div class="stab-panel stab-panel-${ci}${t==='cifrado'?' active':''}" id="spanel-${ci}-${t}">${buildPanel(c,ci,t)}</div>`).join('');
+    html+=`<div class="song-card">
+      <div class="song-card-header" onclick="toggleSong(${ci})">
+        <div class="song-number">${ci+1}</div>
+        <div class="song-title">${esc(c.titulo)}</div>
+        <div class="song-badges">
+          ${c.tono?`<span class="badge badge-key">${esc(c.tono)}</span>`:''}
+          ${c.bpm?`<span class="badge badge-bpm">${c.bpm} BPM</span>`:''}
+          <span class="badge ${c.lista?'badge-ok':'badge-wip'}">${c.lista?'Lista':'En progreso'}</span>
+        </div>
+        <div class="song-chevron" id="chev-${ci}">▼</div>
+      </div>
+      <div class="song-body" id="sbody-${ci}">
+        <div class="song-tabs">${tabsHtml}</div>
+        <div class="song-tab-content">${panelsHtml}</div>
+      </div>
+    </div>`;
+  });
+  html+=`<div class="section-add-area">
+    <button class="btn-ghost" onclick="toggleAddCancion()">+ Agregar canción</button>
+    <div id="add-cancion-form" style="display:none;margin-top:12px;" class="sub-form">
+      <div class="grid3">
+        <div class="form-field"><div class="field-label">Título</div><input id="nc-titulo" placeholder="Nombre de la canción"></div>
+        <div class="form-field"><div class="field-label">Tono</div><input id="nc-tono" placeholder="Am, C, G..."></div>
+        <div class="form-field"><div class="field-label">BPM</div><input id="nc-bpm" type="number" placeholder="120"></div>
+      </div>
+      <div class="row-gap">
+        <button class="btn-primary" onclick="saveCancion()">Guardar canción</button>
+        <button class="btn-ghost sm" onclick="document.getElementById('add-cancion-form').style.display='none'">Cancelar</button>
+      </div>
+    </div>
+  </div>`;
+  el.innerHTML=html;
+}
+
+function toggleSong(ci){
+  const body=document.getElementById('sbody-'+ci);
+  const chev=document.getElementById('chev-'+ci);
+  body.classList.toggle('open');chev.classList.toggle('open');
+}
+function toggleAddBloque(ci){const el=document.getElementById('add-bloque-'+ci);el.style.display=el.style.display==='none'?'block':'none';}
+function toggleAddCancion(){const el=document.getElementById('add-cancion-form');el.style.display=el.style.display==='none'?'block':'none';}
+
+async function saveBloque(ci){
+  const nombre=document.getElementById('bl-n-'+ci).value.trim();
+  if(!nombre)return;
+  const rep=document.getElementById('bl-r-'+ci).value.trim();
+  const letra=document.getElementById('bl-letra-'+ci).value.trim();
+  if(!db.canciones[ci].bloques)db.canciones[ci].bloques=[];
+  db.canciones[ci].bloques.push({nombre,rep,cifrado:letra});
+  await supa.from('canciones').update({bloques:db.canciones[ci].bloques}).eq('id',db.canciones[ci].id);
+  renderCanciones();reopenSong(ci,'cifrado');
+}
+async function deleteBloque(ci,bi){
+  db.canciones[ci].bloques.splice(bi,1);
+  await supa.from('canciones').update({bloques:db.canciones[ci].bloques}).eq('id',db.canciones[ci].id);
+  renderCanciones();reopenSong(ci,'cifrado');
+}
+async function togglePedal(ci,member,pedal){
+  if(!db.canciones[ci].pedales)db.canciones[ci].pedales={};
+  if(!db.canciones[ci].pedales[member])db.canciones[ci].pedales[member]=[];
+  const arr=db.canciones[ci].pedales[member];
+  const idx=arr.indexOf(pedal);
+  if(idx>=0)arr.splice(idx,1);else arr.push(pedal);
+  await supa.from('canciones').update({pedales:db.canciones[ci].pedales}).eq('id',db.canciones[ci].id);
+  const tabId=currentWho==='todos'?(member==='Vocal Guit'?'vocal-guit':'guit-1era'):'mi-parte';
+  renderCanciones();reopenSong(ci,tabId);
+}
+async function saveNota(ci,m,v){
+  if(!db.canciones[ci].notas)db.canciones[ci].notas={};
+  db.canciones[ci].notas[m]=v.trim();
+  await supa.from('canciones').update({notas:db.canciones[ci].notas}).eq('id',db.canciones[ci].id);
+}
+function saveCapsula(ci,key,val,el){
+  if(!db.canciones[ci].notas)db.canciones[ci].notas={};
+  db.canciones[ci].notas[key]=val;
+  supa.from('canciones').update({notas:db.canciones[ci].notas}).eq('id',db.canciones[ci].id);
+  el.closest('.capsula-row').querySelectorAll('.capsula-item').forEach(i=>i.classList.remove('on'));
+  el.classList.add('on');
+}
+async function saveNotaGen(ci,v){
+  db.canciones[ci].nota_general=v.trim();
+  await supa.from('canciones').update({nota_general:db.canciones[ci].nota_general}).eq('id',db.canciones[ci].id);
+}
+async function saveBkit(ci,k,v){
+  if(!db.canciones[ci].bkit)db.canciones[ci].bkit={};
+  db.canciones[ci].bkit[k]=v.trim();
+  await supa.from('canciones').update({bkit:db.canciones[ci].bkit}).eq('id',db.canciones[ci].id);
+}
+async function toggleLista(ci){
+  db.canciones[ci].lista=!db.canciones[ci].lista;
+  await supa.from('canciones').update({lista:db.canciones[ci].lista}).eq('id',db.canciones[ci].id);
+  renderCanciones();reopenSong(ci,'general');
+}
+async function deleteCancion(ci){
+  if(!confirm('¿Eliminar esta canción?'))return;
+  await supa.from('canciones').delete().eq('id',db.canciones[ci].id);
+  db.canciones.splice(ci,1);renderCanciones();
+}
+async function saveCancion(){
+  const titulo=document.getElementById('nc-titulo').value.trim();if(!titulo)return;
+  const nueva={titulo,tono:document.getElementById('nc-tono').value.trim(),bpm:document.getElementById('nc-bpm').value||null,lista:false,bloques:[],notas:{},pedales:{},bkit:{},nota_general:''};
+  const{data}=await supa.from('canciones').insert(nueva).select().single();
+  if(data){db.canciones.push(data);renderCanciones();}
+}
+function reopenSong(ci,tab){
+  const body=document.getElementById('sbody-'+ci);const chev=document.getElementById('chev-'+ci);
+  if(body){body.classList.add('open');if(chev)chev.classList.add('open');}
+  if(tab)showSongTab(ci,tab);
+}
+
+// ── TELEPROMPTER ──
+let tpPlaying=false,tpAnim=null,tpPos=0,tpSpeed=35,tpTotal=0;
+
+function openTP(ci){
+  const c=db.canciones[ci];
+  const overlay=document.getElementById('tp-overlay');
+  document.getElementById('tp-title').textContent=c.titulo+(c.tono?' — '+c.tono:'');
+  const content=document.getElementById('tp-content');
+  let html='';
+  (c.bloques||[]).forEach(b=>{
+    html+=`<div class="tp-bloque-name">${b.nombre||''}${b.rep?' ×'+b.rep:''}</div>`;
+    const raw=b.cifrado||'';
+    if(!raw.trim()){html+='<div style="height:20px;"></div>';return;}
+    raw.split('\n').forEach(line=>{
+      if(!line.trim()){html+='<div style="height:16px;"></div>';return;}
+      html+='<div class="tp-line">';
+      line.split(' ').forEach(w=>{
+        const p=w.split('|');
+        if(p.length>=2){
+          html+=`<span class="tp-word"><span class="tp-chord">${p[0]}</span>${p.slice(1).join('|')} </span>`;
+        } else {
+          html+=`<span class="tp-word">${w} </span>`;
+        }
+      });
+      html+='</div>';
+    });
+  });
+  content.innerHTML=html;
+  content.style.transform='translateY(0px)';
+  tpPos=0;tpPlaying=false;
+  document.getElementById('tp-playbtn').textContent='▶ Play';
+  document.getElementById('tp-progress').style.width='0%';
+  overlay.classList.add('active');
+  document.body.style.overflow='hidden';
+}
+
+function closeTP(){
+  document.getElementById('tp-overlay').classList.remove('active');
+  document.body.style.overflow='';
+  if(tpAnim)cancelAnimationFrame(tpAnim);
+  tpPlaying=false;
+}
+
+function updateSpeed(){
+  tpSpeed=parseInt(document.getElementById('tp-speed').value);
+}
+
+function togglePlay(){
+  tpPlaying=!tpPlaying;
+  document.getElementById('tp-playbtn').textContent=tpPlaying?'⏸ Pausa':'▶ Play';
+  if(tpPlaying)animateTP();
+}
+
+function resetTP(){
+  tpPos=0;
+  document.getElementById('tp-content').style.transform='translateY(0px)';
+  document.getElementById('tp-progress').style.width='0%';
+  if(tpPlaying){tpPlaying=false;document.getElementById('tp-playbtn').textContent='▶ Play';}
+  if(tpAnim)cancelAnimationFrame(tpAnim);
+}
+
+function animateTP(){
+  if(!tpPlaying)return;
+  const content=document.getElementById('tp-content');
+  const stage=content.parentElement;
+  const maxScroll=content.scrollHeight-stage.clientHeight+120;
+  if(maxScroll<=0){tpPlaying=false;return;}
+  tpPos+=tpSpeed/500;
+  if(tpPos>=maxScroll){tpPos=maxScroll;tpPlaying=false;document.getElementById('tp-playbtn').textContent='▶ Play';}
+  content.style.transform=`translateY(-${tpPos}px)`;
+  document.getElementById('tp-progress').style.width=(tpPos/maxScroll*100)+'%';
+  tpAnim=requestAnimationFrame(animateTP);
+}
+
+document.getElementById('tp-stage').addEventListener('click',function(e){
+  if(e.target.classList.contains('tp-close'))return;
+  togglePlay();
+});
+
+// ── SESIONES ──
+function renderSesiones(){
+  const el=document.getElementById('tab-sesiones');
+  const sorted=[...db.sesiones].sort((a,b)=>(b.fecha||'')>(a.fecha||'')?1:-1);
+  let html='';
+  if(!sorted.length)html='<div class="empty"><div class="empty-icon">🎙</div>Sin sesiones grabadas.</div>';
+  sorted.forEach(s=>{
+    const si=db.sesiones.indexOf(s);
+    const links=[s.link1,s.link2,s.link3].filter(Boolean);
+    html+=`<div class="sesion-card">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;">
+        <div style="flex:1;">
+          <div class="sesion-date">📅 ${esc(s.fecha||'—')}</div>
+          <div class="sesion-title">${esc(s.titulo)}</div>
+          ${s.notas?`<div class="sesion-notas">${esc(s.notas)}</div>`:''}
+          <div class="links-row">
+            ${links.map((l,i)=>`<a class="link-btn" href="${esc(l)}" target="_blank" rel="noreferrer">▶ Grabación ${i+1}</a>`).join('')||'<span style="font-size:11px;color:var(--text3);">Sin links</span>'}
+          </div>
+        </div>
+        <button class="btn-ghost sm danger" onclick="deleteSesion(${si})">🗑</button>
+      </div>
+    </div>`;
+  });
+  html+=`<div class="section-add-area">
+    <button class="btn-ghost" onclick="toggleAddSesion()">+ Agregar sesión</button>
+    <div id="add-sesion-form" style="display:none;margin-top:12px;" class="sub-form">
+      <div class="grid2">
+        <div class="form-field"><div class="field-label">Fecha</div><input id="ns-fecha" type="date"></div>
+        <div class="form-field"><div class="field-label">Descripción</div><input id="ns-titulo" placeholder="Sala, demo, live..."></div>
+      </div>
+      <div class="form-field"><div class="field-label">Link grabación 1 (H4n / Drive / WhatsApp)</div><input id="ns-link1" placeholder="https://..."></div>
+      <div class="form-field"><div class="field-label">Link grabación 2</div><input id="ns-link2" placeholder="https://... (opcional)"></div>
+      <div class="form-field"><div class="field-label">Link grabación 3</div><input id="ns-link3" placeholder="https://... (opcional)"></div>
+      <div class="form-field"><div class="field-label">Notas</div><input id="ns-notas" placeholder="Notas de la sesión"></div>
+      <div class="row-gap">
+        <button class="btn-primary" onclick="saveSesion()">Guardar sesión</button>
+        <button class="btn-ghost sm" onclick="document.getElementById('add-sesion-form').style.display='none'">Cancelar</button>
+      </div>
+    </div>
+  </div>`;
+  el.innerHTML=html;
+}
+function toggleAddSesion(){const el=document.getElementById('add-sesion-form');el.style.display=el.style.display==='none'?'block':'none';if(el.style.display==='block')document.getElementById('ns-fecha').value=new Date().toISOString().split('T')[0];}
+async function saveSesion(){
+  const titulo=document.getElementById('ns-titulo').value.trim();if(!titulo)return;
+  const nueva={fecha:document.getElementById('ns-fecha').value,titulo,link1:document.getElementById('ns-link1').value.trim(),link2:document.getElementById('ns-link2').value.trim(),link3:document.getElementById('ns-link3').value.trim(),notas:document.getElementById('ns-notas').value.trim()};
+  const{data}=await supa.from('sesiones').insert(nueva).select().single();
+  if(data){db.sesiones.unshift(data);renderSesiones();}
+}
+async function deleteSesion(si){if(!confirm('¿Eliminar?'))return;await supa.from('sesiones').delete().eq('id',db.sesiones[si].id);db.sesiones.splice(si,1);renderSesiones();}
+
+// ── PENDIENTES ──
+function renderPendientes(){
+  const el=document.getElementById('tab-pendientes');
+  let items='';
+  if(!db.pendientes.length)items='<div class="empty" style="padding:2rem 0;"><div class="empty-icon">✅</div>¡Todo al día!</div>';
+  db.pendientes.forEach((p,pi)=>{
+    items+=`<div class="pend-item">
+      <div class="check-box${p.done?' done':''}" onclick="togglePend(${pi})">${p.done?'✓':''}</div>
+      <div style="flex:1;"><div class="pend-texto${p.done?' done':''}">${esc(p.texto)}</div>${p.quien?`<div class="pend-quien">👤 ${esc(p.quien)}</div>`:''}</div>
+      <button class="btn-ghost sm danger" onclick="deletePend(${pi})">✕</button>
+    </div>`;
+  });
+  el.innerHTML=`<div class="pend-card">${items}</div>
+  <div class="section-add-area">
+    <button class="btn-ghost" onclick="toggleAddPend()">+ Agregar pendiente</button>
+    <div id="add-pend-form" style="display:none;margin-top:12px;" class="sub-form">
+      <div class="form-field"><div class="field-label">Descripción</div><input id="np-texto" placeholder="¿Qué falta hacer?"></div>
+      <div class="form-field"><div class="field-label">Asignado a</div>
+        <select id="np-quien"><option value="">— Integrante —</option><option>Vocal Guit</option><option>Guit 1era</option><option>Batería</option><option>Bass</option><option>Todos</option></select>
+      </div>
+      <div class="row-gap">
+        <button class="btn-primary" onclick="savePend()">Agregar</button>
+        <button class="btn-ghost sm" onclick="document.getElementById('add-pend-form').style.display='none'">Cancelar</button>
+      </div>
+    </div>
+  </div>`;
+}
+function toggleAddPend(){const el=document.getElementById('add-pend-form');el.style.display=el.style.display==='none'?'block':'none';}
+async function togglePend(pi){
+  db.pendientes[pi].done=!db.pendientes[pi].done;
+  await supa.from('pendientes').update({done:db.pendientes[pi].done}).eq('id',db.pendientes[pi].id);
+  renderPendientes();
+}
+async function deletePend(pi){
+  await supa.from('pendientes').delete().eq('id',db.pendientes[pi].id);
+  db.pendientes.splice(pi,1);renderPendientes();
+}
+async function savePend(){
+  const texto=document.getElementById('np-texto').value.trim();if(!texto)return;
+  const nuevo={texto,quien:document.getElementById('np-quien').value,done:false};
+  const{data}=await supa.from('pendientes').insert(nuevo).select().single();
+  if(data){db.pendientes.push(data);renderPendientes();}
+}
+
+// ── INIT ──
+showLoading(true);
+setWho('todos');
+loadAll().then(()=>subscribeRealtime());
+</script>
+</body>
+</html>
