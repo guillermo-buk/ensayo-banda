@@ -596,6 +596,11 @@ function buildBassPanel(c,ci){
 
 function buildGeneralPanel(c,ci){
   return`<div>
+    <div class="slabel">Nombre</div>
+    <div class="row-gap" style="margin-bottom:16px;">
+      <span style="font-size:14px;font-weight:500;">${esc(c.titulo)}</span>
+      <button class="btn-ghost sm" onclick="renameSong(${ci})">✏ Renombrar</button>
+    </div>
     <div class="slabel">Estado</div>
     <div class="row-gap" style="margin-bottom:16px;">
       <button class="btn-ghost sm" onclick="toggleLista(${ci})">${c.lista?'↩ En progreso':'✓ Marcar lista'}</button>
@@ -638,7 +643,7 @@ function renderCanciones(){
     html+=`<div class="song-card">
       <div class="song-card-header" onclick="toggleSong(${ci})">
         <div class="song-number">${ci+1}</div>
-        <div class="song-title">${esc(c.titulo)}</div>
+        <div class="song-title" ondblclick="event.stopPropagation();renameSong(${ci})" title="Doble clic para renombrar">${esc(c.titulo)}</div>
         <div class="song-badges">
           ${c.tono?`<span class="badge badge-key">${esc(c.tono)}</span>`:''}
           ${c.bpm?`<span class="badge badge-bpm">${c.bpm} BPM</span>`:''}
@@ -738,6 +743,13 @@ async function saveCancion(){
   const nueva={titulo,tono:document.getElementById('nc-tono').value.trim(),bpm:document.getElementById('nc-bpm').value||null,lista:false,bloques:[],notas:{},pedales:{},bkit:{},nota_general:''};
   const{data}=await supa.from('canciones').insert(nueva).select().single();
   if(data){db.canciones.push(data);renderCanciones();}
+}
+async function renameSong(ci){
+  const nuevo=prompt('Nuevo nombre:',db.canciones[ci].titulo);
+  if(!nuevo||!nuevo.trim()||nuevo.trim()===db.canciones[ci].titulo)return;
+  db.canciones[ci].titulo=nuevo.trim();
+  await supa.from('canciones').update({titulo:db.canciones[ci].titulo}).eq('id',db.canciones[ci].id);
+  renderCanciones();
 }
 function reopenSong(ci,tab){
   const body=document.getElementById('sbody-'+ci);const chev=document.getElementById('chev-'+ci);
