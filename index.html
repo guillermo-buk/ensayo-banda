@@ -245,7 +245,7 @@ select option{background:var(--bg3);}
     <div class="tp-song-name" id="tp-title">—</div>
     <div class="tp-controls">
       <span class="tp-speed-label">Velocidad</span>
-      <input type="range" class="tp-speed" id="tp-speed" min="10" max="120" value="35" step="5" oninput="updateSpeed()">
+      <input type="range" class="tp-speed" id="tp-speed" min="20" max="300" value="80" step="10" oninput="updateSpeed()">
       <button class="tp-btn play" id="tp-playbtn" onclick="togglePlay()">▶ Play</button>
       <button class="tp-btn" onclick="resetTP()">↺ Inicio</button>
       <button class="tp-close" onclick="closeTP()">✕</button>
@@ -746,7 +746,7 @@ function reopenSong(ci,tab){
 }
 
 // ── TELEPROMPTER ──
-let tpPlaying=false,tpAnim=null,tpPos=0,tpSpeed=35,tpTotal=0;
+let tpPlaying=false,tpAnim=null,tpPos=0,tpSpeed=80,tpTotal=0;
 
 function openTP(ci){
   const c=db.canciones[ci];
