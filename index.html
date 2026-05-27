@@ -353,7 +353,7 @@ function showSongTab(ci,tabId){
 
 // ── CIFRADO RENDER ──
 function renderCifradoHtml(raw){
-  if(!raw||!raw.trim())return'<span class="cifrado-empty">Sin cifrado. Usá el editor de abajo.</span>';
+  if(!raw||!raw.trim())return'<span class="cifrado-empty">Sin cifrado. Usa el editor de abajo.</span>';
   return raw.split('\n').map(line=>{
     if(!line.trim())return'<div style="height:6px;"></div>';
     return'<div class="cifrado-line">'+line.split(' ').map(w=>{
@@ -385,7 +385,7 @@ function buildCifradoPanel(c,ci){
     <span style="font-size:11px;color:var(--text3);">Modo pantalla completa con scroll automático</span>
   </div>`;
   html+='<div class="slabel">Bloques</div>';
-  if(!bloques.length) html+='<div class="empty" style="padding:1.5rem 0;"><div class="empty-icon">🎼</div>Sin bloques. Agregá uno abajo.</div>';
+  if(!bloques.length) html+='<div class="empty" style="padding:1.5rem 0;"><div class="empty-icon">🎼</div>Sin bloques. Agrega uno abajo.</div>';
   bloques.forEach((b,bi)=>{
     html+=`<div class="bloque">
       <div class="bloque-header">
@@ -411,8 +411,8 @@ function buildCifradoPanel(c,ci){
       <div class="form-field"><div class="field-label">Repeticiones</div><input id="bl-r-${ci}" type="number" placeholder="1"></div>
     </div>
     <div class="form-field">
-      <div class="field-label">Letra (después le agregás acordes)</div>
-      <textarea id="bl-letra-${ci}" placeholder="Escribí la letra aquí, una frase por línea..." style="min-height:80px;"></textarea>
+      <div class="field-label">Letra (después le agregas acordes)</div>
+      <textarea id="bl-letra-${ci}" placeholder="Escribe la letra aquí, una frase por línea..." style="min-height:80px;"></textarea>
     </div>
     <div class="row-gap">
       <button class="btn-primary sm" onclick="saveBloque(${ci})">Agregar bloque</button>
@@ -433,7 +433,7 @@ function buildLyricEditor(raw,ci,bi){
       <input class="chord-input-add" id="custom-chord-${ci}-${bi}" placeholder="Otro..." onkeydown="if(event.key==='Enter'){insertChord('lyric-raw-${ci}-${bi}',this.value.trim());this.value='';}">
     </div>
     <div class="lyric-editor-main">
-      <textarea class="lyric-raw" id="lyric-raw-${ci}-${bi}" placeholder="Escribí o pegá la letra. Seleccioná una palabra y hacé clic en un acorde para insertarlo."
+      <textarea class="lyric-raw" id="lyric-raw-${ci}-${bi}" placeholder="Escribe o pega la letra. Selecciona una palabra y haz clic en un acorde para insertarlo."
         oninput="updateLyricPreview(${ci},${bi})">${esc(raw)}</textarea>
       <div class="lyric-preview-pane">
         <div class="lyric-preview-label">Vista previa</div>
@@ -443,7 +443,7 @@ function buildLyricEditor(raw,ci,bi){
     <div style="padding:10px 14px;border-top:1px solid var(--border);display:flex;gap:8px;">
       <button class="btn-primary sm" onclick="saveLyricEdit(${ci},${bi})">Guardar</button>
       <button class="btn-ghost sm" onclick="toggleBloqueEdit(${ci},${bi})">Cancelar</button>
-      <span class="hint" style="align-self:center;">Seleccioná texto → clic en acorde para insertar sobre esa palabra</span>
+      <span class="hint" style="align-self:center;">Selecciona texto → clic en acorde para insertar sobre esa palabra</span>
     </div>
   </div>`;
 }
@@ -574,7 +574,7 @@ function buildBatPanel(c,ci){
   const bkitHtml=BKIT_FIELDS.map(([k,label])=>`
     <div class="bkit-item">
       <div class="bkit-label">${esc(label)}</div>
-      <textarea placeholder="Describí la parte..." onblur="saveBkit(${ci},'${k}',this.value)">${esc(bkit[k]||'')}</textarea>
+      <textarea placeholder="Describe la parte..." onblur="saveBkit(${ci},'${k}',this.value)">${esc(bkit[k]||'')}</textarea>
     </div>`).join('');
   return`<div class="member-box">
     <div class="member-box-title"><span class="member-dot dot-bat"></span>Batería</div>
@@ -635,7 +635,7 @@ function buildPanel(c,ci,tabId){
 function renderCanciones(){
   const el=document.getElementById('tab-canciones');
   let html='';
-  if(!db.canciones.length) html='<div class="empty"><div class="empty-icon">🎸</div>Sin canciones. ¡Agregá la primera!</div>';
+  if(!db.canciones.length) html='<div class="empty"><div class="empty-icon">🎸</div>Sin canciones. ¡Agrega la primera!</div>';
   const songTabs=getSongTabs();
   db.canciones.forEach((c,ci)=>{
     const tabsHtml=songTabs.map(t=>`<button class="song-tab stab-${ci}${t==='cifrado'?' active':''}" id="stab-${ci}-${t}" onclick="showSongTab(${ci},'${t}')">${TAB_LABELS[t]||t}</button>`).join('');
