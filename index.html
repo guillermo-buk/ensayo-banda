@@ -29,11 +29,12 @@ input,textarea,select{font-family:var(--font-body);}
 .app-logo span{color:var(--accent);}
 .app-sub{font-size:11px;color:var(--text3);margin-top:4px;letter-spacing:0.05em;text-transform:uppercase;}
 .local-pill{font-size:10px;background:rgba(200,240,96,0.12);color:var(--accent);padding:3px 10px;border-radius:20px;border:1px solid rgba(200,240,96,0.2);letter-spacing:0.05em;text-transform:uppercase;}
-.who-bar{display:flex;gap:6px;padding:1rem 1.5rem 0;flex-wrap:wrap;align-items:center;}
-.who-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-right:4px;}
-.who-btn{font-family:var(--font-body);font-size:11px;padding:5px 14px;border-radius:20px;border:1px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;transition:all .15s;}
-.who-btn:hover{border-color:var(--text3);color:var(--text);}
-.who-btn.active{background:var(--accent);color:#0e0e10;border-color:var(--accent);font-weight:500;}
+/* who-bar removed */
+.song-who-bar{display:flex;gap:6px;padding:10px 18px;flex-wrap:wrap;align-items:center;background:var(--bg4);border-bottom:1px solid var(--border);}
+.song-who-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-right:4px;}
+.song-who-btn{font-family:var(--font-body);font-size:11px;padding:4px 12px;border-radius:20px;border:1px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;transition:all .15s;}
+.song-who-btn:hover{border-color:var(--text3);color:var(--text);}
+.song-who-btn.active{background:var(--accent);color:#0e0e10;border-color:var(--accent);font-weight:500;}
 .main-nav{display:flex;padding:1.25rem 1.5rem 0;border-bottom:1px solid var(--border);margin-top:1rem;}
 .nav-tab{font-family:var(--font-head);font-size:13px;font-weight:600;padding:8px 0;margin-right:28px;cursor:pointer;border:none;background:none;color:var(--text2);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;}
 .nav-tab:hover{color:var(--text);}
@@ -104,8 +105,12 @@ select option{background:var(--bg3);}
 
 /* INLINE CHORD EDITOR */
 .lyric-editor-area{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;}
-.lyric-editor-toolbar{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);background:var(--bg4);flex-wrap:wrap;}
+.lyric-editor-toolbar{display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border);background:var(--bg4);flex-wrap:wrap;}
 .lyric-editor-toolbar span{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;}
+.chord-group{display:flex;flex-direction:column;gap:4px;}
+.chord-group-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;}
+.chord-group-btns{display:flex;flex-wrap:wrap;gap:4px;}
+.lyric-hint{font-size:11px;color:var(--text3);padding:6px 14px;background:var(--bg4);border-bottom:1px solid var(--border);}
 .chord-pill-insert{font-size:11px;padding:3px 10px;border-radius:20px;border:1px solid rgba(200,240,96,0.3);background:rgba(200,240,96,0.08);color:var(--accent);cursor:pointer;font-family:var(--font-body);transition:all .15s;}
 .chord-pill-insert:hover{background:rgba(200,240,96,0.18);}
 .chord-input-add{width:80px;font-size:11px;padding:4px 8px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg3);color:var(--text);}
@@ -237,14 +242,6 @@ select option{background:var(--bg3);}
     </div>
     <span class="local-pill">● en línea</span>
   </div>
-  <div class="who-bar">
-    <span class="who-label">Soy:</span>
-    <button class="who-btn" onclick="setWho('todos')" id="who-todos">Todos</button>
-    <button class="who-btn" onclick="setWho('Vocal Guit')" id="who-VocalGuit">Vocal Guit</button>
-    <button class="who-btn" onclick="setWho('Guit 1era')" id="who-Guit1era">Guit 1era</button>
-    <button class="who-btn" onclick="setWho('Batería')" id="who-Bateria">Batería</button>
-    <button class="who-btn" onclick="setWho('Bass')" id="who-Bass">Bass</button>
-  </div>
   <nav class="main-nav">
     <button class="nav-tab active" onclick="showTab('canciones')">Canciones</button>
     <button class="nav-tab" onclick="showTab('sesiones')">Sesiones</button>
@@ -281,10 +278,37 @@ const PEDAL_VOCAL=['Compresor','Distorsión','Reverb','Delay'];
 const CAPSULAS_VOCAL=['Neck','Bridge','Mid'];
 const CAPSULAS_G1=['Neck','Bridge','Mid','Mod Gilmour'];
 const BKIT_FIELDS=[['intro','Intro / fill entrada'],['groove','Groove principal'],['fill_pre_coro','Fill pre-coro'],['coro','Dinámica de coro'],['puente','Puente / break'],['redoble','Redobles / ornamentos'],['cierre','Cierre / final']];
-const TAB_LABELS={'cifrado':'📄 Letra + Cifrado','acordes':'🎵 Acordes','mi-parte':'Mi parte','vocal-guit':'Vocal Guit','guit-1era':'Guit 1era','bateria':'Batería','bass':'Bass','general':'General'};
+const TAB_LABELS={'cifrado':'📄 Letra','acordes':'🎵 Acordes','mi-parte':'Mi parte','vocal-guit':'Vocal Guit','guit-1era':'Guit 1era','bateria':'Batería','bass':'Bass','general':'General'};
 
 let db={canciones:[],sesiones:[],pendientes:[]};
-let currentWho='todos';
+let currentWho='todos'; // kept for compatibility but per-song overrides
+const songWho={}; // per-song integrante selection
+
+const MEMBERS_LIST=['todos','Vocal Guit','Guit 1era','Batería','Bass'];
+const MEMBERS_LABELS={'todos':'Todos','Vocal Guit':'Vocal Guit','Guit 1era':'Guit 1era','Batería':'Batería','Bass':'Bass'};
+
+function setSongWho(ci,who){
+  songWho[ci]=who;
+  // update buttons
+  document.querySelectorAll(`.song-who-btn-${ci}`).forEach(b=>b.classList.remove('active'));
+  const btn=document.getElementById(`song-who-${ci}-${who.replace(/\s/g,'').replace('í','i').replace('é','e')}`);
+  if(btn)btn.classList.add('active');
+  // rebuild tabs
+  const songTabs=getSongTabsFor(who);
+  const tabsContainer=document.getElementById(`song-tabs-${ci}`);
+  const panelsContainer=document.getElementById(`song-panels-${ci}`);
+  if(!tabsContainer||!panelsContainer)return;
+  const c=db.canciones[ci];
+  tabsContainer.innerHTML=songTabs.map(t=>`<button class="song-tab${t==='cifrado'?' active':''} song-who-tab-${ci}" id="stab-${ci}-${t}" onclick="showSongTab(${ci},'${t}')">${TAB_LABELS[t]||t}</button>`).join('');
+  panelsContainer.innerHTML=songTabs.map(t=>`<div class="stab-panel stab-panel-${ci}${t==='cifrado'?' active':''}" id="spanel-${ci}-${t}">${buildPanelFor(c,ci,t,who)}</div>`).join('');
+}
+
+function getSongTabsFor(who){
+  if(who==='todos') return['cifrado','acordes','vocal-guit','guit-1era','bateria','bass','general'];
+  return['cifrado','acordes','mi-parte','general'];
+}
+
+function setWho(who){currentWho=who;} // kept for compatibility
 
 const SUPA_URL='https://qwmvqalskbwmbausjxan.supabase.co';
 const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF3bXZxYWxza2J3bWJhdXNqeGFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk5MDQyMDgsImV4cCI6MjA5NTQ4MDIwOH0.7ibWgHjkjAWl_TXq20WXTVKw0AtqAQlHgozFYhffj0s';
@@ -441,17 +465,27 @@ function buildCifradoPanel(c,ci){
 }
 
 function buildLyricEditor(raw,ci,bi){
-  // Build toolbar with quick chord buttons
-  const commonChords=['Am','Em','G','C','D','F','E','Dm','A','Bm','C#m','F#m'];
-  const chordBtns=commonChords.map(ch=>`<button class="chord-pill-insert" onclick="insertChord('lyric-raw-${ci}-${bi}','${ch}')">${ch}</button>`).join('');
+  const CHORDS_MAYORES=['C','D','E','F','G','A','B'];
+  const CHORDS_MENORES=['Cm','Dm','Em','Fm','Gm','Am','Bm'];
+  const CHORDS_SHARP=['C#','D#','F#','G#','A#','C#m','D#m','F#m','G#m','A#m'];
+  const CHORDS_EXTRA=['D7','E7','G7','A7','B7','C7','Dm7','Em7','Am7','sus2','sus4','add9'];
+  const makeGroup=(label,list)=>`<div class="chord-group"><span class="chord-group-label">${label}</span><div class="chord-group-btns">${list.map(ch=>`<button class="chord-pill-insert" onclick="insertChord('lyric-raw-${ci}-${bi}','${ch}')">${ch}</button>`).join('')}</div></div>`;
   return`<div class="lyric-editor-area">
     <div class="lyric-editor-toolbar">
-      <span>Insertar acorde:</span>
-      ${chordBtns}
-      <input class="chord-input-add" id="custom-chord-${ci}-${bi}" placeholder="Otro..." onkeydown="if(event.key==='Enter'){insertChord('lyric-raw-${ci}-${bi}',this.value.trim());this.value='';}">
+      ${makeGroup('Mayores',CHORDS_MAYORES)}
+      ${makeGroup('Menores',CHORDS_MENORES)}
+      ${makeGroup('Con #',CHORDS_SHARP)}
+      ${makeGroup('Otros',CHORDS_EXTRA)}
+      <div class="chord-group">
+        <span class="chord-group-label">Personalizado</span>
+        <div class="chord-group-btns">
+          <input class="chord-input-add" id="custom-chord-${ci}-${bi}" placeholder="Ej: G7..." onkeydown="if(event.key==='Enter'){insertChord('lyric-raw-${ci}-${bi}',this.value.trim());this.value='';}">
+        </div>
+      </div>
     </div>
+    <div class="lyric-hint">✏ Escribe la letra. Haz clic al inicio de una palabra para posicionarte, luego selecciona un acorde. El acorde aparecerá sobre esa palabra completa.</div>
     <div class="lyric-editor-main">
-      <textarea class="lyric-raw" id="lyric-raw-${ci}-${bi}" placeholder="Escribe o pega la letra. Selecciona una palabra y haz clic en un acorde para insertarlo."
+      <textarea class="lyric-raw" id="lyric-raw-${ci}-${bi}" placeholder="Escribe la letra aquí, una frase por línea..."
         oninput="updateLyricPreview(${ci},${bi})">${esc(raw)}</textarea>
       <div class="lyric-preview-pane">
         <div class="lyric-preview-label">Vista previa</div>
@@ -461,7 +495,6 @@ function buildLyricEditor(raw,ci,bi){
     <div style="padding:10px 14px;border-top:1px solid var(--border);display:flex;gap:8px;">
       <button class="btn-primary sm" onclick="saveLyricEdit(${ci},${bi})">Guardar</button>
       <button class="btn-ghost sm" onclick="toggleBloqueEdit(${ci},${bi})">Cancelar</button>
-      <span class="hint" style="align-self:center;">Selecciona texto → clic en acorde para insertar sobre esa palabra</span>
     </div>
   </div>`;
 }
@@ -470,28 +503,31 @@ function insertChord(textareaId, chord){
   if(!chord)return;
   const ta=document.getElementById(textareaId);
   if(!ta)return;
-  const start=ta.selectionStart, end=ta.selectionEnd;
+  const pos=ta.selectionStart;
   const val=ta.value;
-  const selectedText=val.substring(start,end);
-  if(selectedText.trim()){
-    // Replace selection: wrap first word with chord
-    const words=selectedText.split(' ');
-    const firstWord=words[0];
-    const rest=words.slice(1).join(' ');
-    // Check if already has a chord
-    const clean=firstWord.replace(/^[^|]+\|/,'');
-    const newText=chord+'|'+clean+(rest?' '+rest:'');
-    ta.value=val.substring(0,start)+newText+val.substring(end);
-    ta.selectionStart=start;
-    ta.selectionEnd=start+newText.length;
+
+  // Find the full word at cursor position
+  let wordStart=pos;
+  let wordEnd=pos;
+  while(wordStart>0&&val[wordStart-1]!==' '&&val[wordStart-1]!=='\n')wordStart--;
+  while(wordEnd<val.length&&val[wordEnd]!==' '&&val[wordEnd]!=='\n')wordEnd++;
+  const word=val.substring(wordStart,wordEnd);
+
+  if(!word.trim()){
+    // Cursor on whitespace — insert marker at cursor
+    const ins=chord+'| ';
+    ta.value=val.substring(0,pos)+ins+val.substring(pos);
+    ta.selectionStart=ta.selectionEnd=pos+ins.length;
   } else {
-    // Insert at cursor
-    const ins=chord+'|';
-    ta.value=val.substring(0,start)+ins+val.substring(end);
-    ta.selectionStart=ta.selectionEnd=start+ins.length;
+    // Strip existing chord from word if any
+    const clean=word.replace(/^[^|]+\|/,'');
+    const newWord=chord+'|'+clean;
+    ta.value=val.substring(0,wordStart)+newWord+val.substring(wordEnd);
+    ta.selectionStart=ta.selectionEnd=wordStart+newWord.length;
   }
   ta.focus();
-  updateLyricPreview(parseInt(textareaId.split('-')[2]),parseInt(textareaId.split('-')[3]));
+  const parts=textareaId.split('-');
+  updateLyricPreview(parseInt(parts[2]),parseInt(parts[3]));
 }
 
 function updateLyricPreview(ci,bi){
@@ -516,7 +552,7 @@ function toggleBloqueEdit(ci,bi){
 
 function buildAcordesPanel(c){
   const{chords,ctx}=extractChords(c.bloques||[]);
-  if(!chords.length) return'<div class="empty" style="padding:2rem 0;"><div class="empty-icon">🎵</div>Los acordes aparecen aquí automáticamente una vez que los cargues en "Letra + Cifrado".</div>';
+  if(!chords.length) return'<div class="empty" style="padding:2rem 0;"><div class="empty-icon">🎵</div>Los acordes aparecen aquí automáticamente una vez que los cargues en "Letra".</div>';
   return`<div class="slabel">Acordes usados en la canción</div>
     <div class="acordes-grid">
       ${chords.map(ch=>`<div class="acorde-chip"><div class="chord-name">${esc(ch)}</div><div class="chord-ctx">${esc((ctx[ch]||[]).join(', '))}</div></div>`).join('')}
@@ -763,14 +799,14 @@ function buildGeneralPanel(c,ci){
   </div>`;
 }
 
-function buildPanel(c,ci,tabId){
+function buildPanelFor(c,ci,tabId,who){
   if(tabId==='cifrado') return buildCifradoPanel(c,ci);
   if(tabId==='acordes') return buildAcordesPanel(c);
   if(tabId==='mi-parte'){
-    if(currentWho==='Vocal Guit') return buildVocalPanel(c,ci);
-    if(currentWho==='Guit 1era') return buildGuitPanel(c,ci,'Guit 1era');
-    if(currentWho==='Batería') return buildBatPanel(c,ci);
-    if(currentWho==='Bass') return buildBassPanel(c,ci);
+    if(who==='Vocal Guit') return buildVocalPanel(c,ci);
+    if(who==='Guit 1era') return buildGuitPanel(c,ci,'Guit 1era');
+    if(who==='Batería') return buildBatPanel(c,ci);
+    if(who==='Bass') return buildBassPanel(c,ci);
   }
   if(tabId==='vocal-guit') return buildVocalPanel(c,ci);
   if(tabId==='guit-1era') return buildGuitPanel(c,ci,'Guit 1era');
@@ -780,13 +816,23 @@ function buildPanel(c,ci,tabId){
   return'';
 }
 
+function buildPanel(c,ci,tabId){
+  return buildPanelFor(c,ci,tabId,songWho[ci]||'todos');
+}
+
 // ── RENDER CANCIONES ──
 function renderCanciones(){
   const el=document.getElementById('tab-canciones');
   let html='';
   if(!db.canciones.length) html='<div class="empty"><div class="empty-icon">🎸</div>Sin canciones. ¡Agrega la primera!</div>';
-  const songTabs=getSongTabs();
+
   db.canciones.forEach((c,ci)=>{
+    const who=songWho[ci]||'todos';
+    const songTabs=getSongTabsFor(who);
+    const whoSelectorHtml=MEMBERS_LIST.map(m=>{
+      const key=`song-who-${ci}-${m.replace(/\s/g,'').replace('í','i').replace('é','e')}`;
+      return`<button class="song-who-btn song-who-btn-${ci}${who===m?' active':''}" id="${key}" onclick="setSongWho(${ci},'${m}')">${MEMBERS_LABELS[m]}</button>`;
+    }).join('');
     const tabsHtml=songTabs.map(t=>`<button class="song-tab stab-${ci}${t==='cifrado'?' active':''}" id="stab-${ci}-${t}" onclick="showSongTab(${ci},'${t}')">${TAB_LABELS[t]||t}</button>`).join('');
     const panelsHtml=songTabs.map(t=>`<div class="stab-panel stab-panel-${ci}${t==='cifrado'?' active':''}" id="spanel-${ci}-${t}">${buildPanel(c,ci,t)}</div>`).join('');
     html+=`<div class="song-card">
@@ -801,11 +847,18 @@ function renderCanciones(){
         <div class="song-chevron" id="chev-${ci}">▼</div>
       </div>
       <div class="song-body" id="sbody-${ci}">
-        <div class="song-tabs">${tabsHtml}</div>
-        <div class="song-tab-content">${panelsHtml}</div>
+        <div class="song-who-bar">
+          <span class="song-who-label">Soy:</span>
+          ${whoSelectorHtml}
+        </div>
+        <div class="song-tabs" id="song-tabs-${ci}">${tabsHtml}</div>
+        <div class="song-tab-content">
+          <div id="song-panels-${ci}">${panelsHtml}</div>
+        </div>
       </div>
     </div>`;
   });
+
   html+=`<div class="section-add-area">
     <button class="btn-ghost" onclick="toggleAddCancion()">+ Agregar canción</button>
     <div id="add-cancion-form" style="display:none;margin-top:12px;" class="sub-form">
@@ -1083,7 +1136,6 @@ async function savePend(){
 
 // ── INIT ──
 showLoading(true);
-setWho('todos');
 loadAll().then(()=>subscribeRealtime());
 </script>
 </body>
