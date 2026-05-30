@@ -623,21 +623,21 @@ async function saveTab(ci,ti){
   // Read nota
   const notaEl=document.getElementById('tab-nota-'+ci+'-'+ti);
   if(notaEl)t.nota=notaEl.value.trim();
-  // Read all cells
-  const strings=t.strings||[[],[],[],[],[],[]];
-  const cols=Math.max(...strings.map(s=>s.length));
-  ['e','B','G','D','A','E'].forEach((_,si)=>{
-    for(let col=0;col<cols;col++){
-      const el=document.getElementById('tc-'+ci+'-'+ti+'-'+si+'-'+col);
-      if(el){
-        while(strings[si].length<=col)strings[si].push('');
-        strings[si][col]=el.value.trim();
-      }
-    }
-  });
-  t.strings=strings;
+  // Read all cells from DOM
+  const stringsEl=document.getElementById('tab-strings-'+ci+'-'+ti);
+  if(stringsEl){
+    const rows=stringsEl.querySelectorAll('.tab-row');
+    const newStrings=[];
+    rows.forEach((row,si)=>{
+      const inputs=row.querySelectorAll('.tab-cell-input');
+      const rowData=[];
+      inputs.forEach(inp=>rowData.push(inp.value.trim()));
+      newStrings.push(rowData);
+    });
+    t.strings=newStrings;
+  }
   await supa.from('canciones').update({tabs:db.canciones[ci].tabs}).eq('id',db.canciones[ci].id);
-  // Show saved feedback without re-rendering
+  // Show saved feedback
   const msg=document.getElementById('tab-saved-'+ci+'-'+ti);
   if(msg){msg.style.display='inline';setTimeout(()=>msg.style.display='none',2000);}
 }
@@ -654,19 +654,46 @@ async function deleteTab(ci,ti){
   await supa.from('canciones').update({tabs:db.canciones[ci].tabs}).eq('id',db.canciones[ci].id);
   renderCanciones();reopenSong(ci,currentWho==='Guit 1era'?'mi-parte':'guit-1era');
 }
-async function addTabCol(ci,ti){
-  const t=db.canciones[ci].tabs[ti];
-  if(!t.strings)t.strings=[[],[],[],[],[],[]];
-  t.strings.forEach(s=>s.push(''));
-  await supa.from('canciones').update({tabs:db.canciones[ci].tabs}).eq('id',db.canciones[ci].id);
-  renderCanciones();reopenSong(ci,currentWho==='Guit 1era'?'mi-parte':'guit-1era');
+function addTabCol(ci,ti){
+  // Add column directly to DOM without re-rendering
+  const strings=['e','B','G','D','A','E'];
+  strings.forEach((_,si)=>{
+    const row=document.getElementById('tab-strings-'+ci+'-'+ti);
+    if(!row)return;
+    const cells=row.querySelectorAll('.tab-row')[si]?.querySelector('.tab-cells');
+    if(!cells)return;
+    // find current col count
+    const inputs=cells.querySelectorAll('.tab-cell-input');
+    const col=inputs.length;
+    const inp=document.createElement('input');
+    inp.className='tab-cell-input';
+    inp.type='text';
+    inp.inputMode='numeric';
+    inp.id=`tc-${ci}-${ti}-${si}-${col}`;
+    inp.placeholder='─';
+    inp.maxLength=3;
+    inp.addEventListener('focus',()=>inp.select());
+    // insert before the +col button
+    const addBtn=cells.querySelector('.tab-add-col');
+    cells.insertBefore(inp,addBtn);
+  });
 }
-async function removeTabCol(ci,ti){
-  const t=db.canciones[ci].tabs[ti];
-  if(!t.strings||t.strings[0].length<=1)return;
-  t.strings.forEach(s=>s.pop());
-  await supa.from('canciones').update({tabs:db.canciones[ci].tabs}).eq('id',db.canciones[ci].id);
-  renderCanciones();reopenSong(ci,currentWho==='Guit 1era'?'mi-parte':'guit-1era');
+
+function removeTabCol(ci,ti){
+  const strings=['e','B','G','D','A','E'];
+  // check min cols
+  const row=document.getElementById('tab-strings-'+ci+'-'+ti);
+  if(!row)return;
+  const firstCells=row.querySelectorAll('.tab-row')[0]?.querySelector('.tab-cells');
+  if(!firstCells)return;
+  const count=firstCells.querySelectorAll('.tab-cell-input').length;
+  if(count<=1)return;
+  strings.forEach((_,si)=>{
+    const cells=row.querySelectorAll('.tab-row')[si]?.querySelector('.tab-cells');
+    if(!cells)return;
+    const inputs=cells.querySelectorAll('.tab-cell-input');
+    if(inputs.length>0)inputs[inputs.length-1].remove();
+  });
 }
 
 function buildGuitPanel(c,ci,member){
