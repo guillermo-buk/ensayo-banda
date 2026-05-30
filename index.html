@@ -169,11 +169,10 @@ select option{background:var(--bg3);}
 .tab-row{display:flex;align-items:center;border-bottom:1px solid rgba(255,255,255,0.06);}
 .tab-row:last-child{border-bottom:none;}
 .tab-string-label{width:24px;font-size:12px;font-weight:600;color:var(--accent);text-align:center;flex-shrink:0;padding:6px 0;}
-.tab-cells{display:flex;align-items:center;gap:0;}
-.tab-cell{min-width:32px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;border-right:1px solid rgba(255,255,255,0.06);transition:background .1s;}
-.tab-cell:hover{background:rgba(200,240,96,0.1);}
-.tab-cell-val{font-size:13px;color:var(--text);font-family:var(--font-body);}
-.tab-cell:hover .tab-cell-val{color:var(--accent);}
+.tab-cells{display:flex;align-items:center;gap:2px;}
+.tab-cell-input{width:36px;height:36px;text-align:center;font-size:13px;font-family:var(--font-body);color:var(--text);background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:0;cursor:pointer;transition:all .15s;}
+.tab-cell-input:focus{outline:none;border-color:var(--accent);background:var(--bg4);color:var(--accent);}
+.tab-cell-input::placeholder{color:var(--text3);}
 .tab-add-col{height:36px;width:28px;background:none;border:none;border-left:1px dashed var(--border2);color:var(--text3);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all .15s;}
 .tab-add-col:hover{color:var(--accent);background:rgba(200,240,96,0.08);}
 
@@ -572,9 +571,11 @@ function buildTabEditor(c,ci){
   const tabs=c.tabs||[];
   let tabsHtml='';
   if(!tabs.length){
-    tabsHtml='<div style="font-size:12px;color:var(--text2);margin-bottom:8px;">Sin tablaturas. Agrega una.</div>';
+    tabsHtml='<div style="font-size:12px;color:var(--text2);margin-bottom:8px;">Sin tablaturas. Agrega una abajo.</div>';
   }
   tabs.forEach((t,ti)=>{
+    const strings=t.strings||[[],[],[],[],[],[]];
+    const cols=Math.max(...strings.map(s=>s.length),4);
     tabsHtml+=`<div class="tab-section">
       <div class="tab-section-header">
         <input class="tab-name-input" value="${esc(t.nombre||'')}" placeholder="Nombre (ej: Solo intro, Lick coro...)" onblur="saveTabName(${ci},${ti},this.value)">
@@ -585,15 +586,21 @@ function buildTabEditor(c,ci){
           ${['e','B','G','D','A','E'].map((s,si)=>`
             <div class="tab-row">
               <div class="tab-string-label">${s}</div>
-              <div class="tab-cells" id="tab-cells-${ci}-${ti}-${si}">
-                ${(t.strings&&t.strings[si]||[]).map((v,col)=>`
-                  <div class="tab-cell" onclick="editTabCell(${ci},${ti},${si},${col},this)">
-                    <span class="tab-cell-val">${v===''?'─':v}</span>
-                  </div>`).join('')}
-                <button class="tab-add-col" onclick="addTabCol(${ci},${ti})">+</button>
+              <div class="tab-cells">
+                ${Array.from({length:cols},(_,col)=>{
+                  const v=(strings[si]&&strings[si][col]!=null)?strings[si][col]:'';
+                  return`<input class="tab-cell-input" type="text" inputmode="numeric"
+                    value="${esc(v)}" placeholder="─" maxlength="3"
+                    onchange="saveTabCell(${ci},${ti},${si},${col},this.value)"
+                    onfocus="this.select()">`;
+                }).join('')}
               </div>
             </div>`).join('')}
         </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:8px;">
+        <button class="btn-ghost sm" onclick="addTabCol(${ci},${ti})">+ Columna</button>
+        <button class="btn-ghost sm danger" onclick="removeTabCol(${ci},${ti})" ${cols<=1?'disabled':''}>− Columna</button>
       </div>
       <div class="slabel">Notas del lick</div>
       <textarea placeholder="Técnica, digitación, referencia..." style="min-height:36px;font-size:12px;" onblur="saveTabNota(${ci},${ti},this.value)">${esc(t.nota||'')}</textarea>
@@ -605,42 +612,50 @@ function buildTabEditor(c,ci){
   </div>`;
 }
 
-function addTab(ci){
-  if(!db.canciones[ci].tabs)db.canciones[ci].tabs=[];
-  db.canciones[ci].tabs.push({nombre:'',strings:[[''],[''],[''],[''],[''],['']] ,nota:''});
-  supa.from('canciones').update({tabs:db.canciones[ci].tabs}).eq('id',db.canciones[ci].id);
-  renderCanciones();reopenSong(ci,'guit-1era');
-  if(currentWho==='Guit 1era')reopenSong(ci,'mi-parte');
-}
-function deleteTab(ci,ti){
-  db.canciones[ci].tabs.splice(ti,1);
-  supa.from('canciones').update({tabs:db.canciones[ci].tabs}).eq('id',db.canciones[ci].id);
-  renderCanciones();reopenSong(ci,'guit-1era');
-}
-function saveTabName(ci,ti,val){
-  if(!db.canciones[ci].tabs[ti])return;
-  db.canciones[ci].tabs[ti].nombre=val;
-  supa.from('canciones').update({tabs:db.canciones[ci].tabs}).eq('id',db.canciones[ci].id);
-}
-function saveTabNota(ci,ti,val){
-  if(!db.canciones[ci].tabs[ti])return;
-  db.canciones[ci].tabs[ti].nota=val;
-  supa.from('canciones').update({tabs:db.canciones[ci].tabs}).eq('id',db.canciones[ci].id);
-}
-function addTabCol(ci,ti){
+async function saveTabCell(ci,ti,si,col,val){
+  if(!db.canciones[ci].tabs)return;
   const t=db.canciones[ci].tabs[ti];
-  t.strings.forEach(s=>s.push(''));
-  supa.from('canciones').update({tabs:db.canciones[ci].tabs}).eq('id',db.canciones[ci].id);
-  renderCanciones();reopenSong(ci,'guit-1era');
-  if(currentWho==='Guit 1era')reopenSong(ci,'mi-parte');
+  if(!t)return;
+  if(!t.strings)t.strings=[[],[],[],[],[],[]];
+  while(t.strings[si].length<=col)t.strings[si].push('');
+  t.strings[si][col]=val.trim();
+  await supa.from('canciones').update({tabs:db.canciones[ci].tabs}).eq('id',db.canciones[ci].id);
 }
-function editTabCell(ci,ti,si,col,el){
-  const cur=db.canciones[ci].tabs[ti].strings[si][col];
-  const val=prompt('Traste (número, 0 = al aire, vacío = silencio):', cur==='─'?'':cur);
-  if(val===null)return;
-  db.canciones[ci].tabs[ti].strings[si][col]=val.trim();
-  supa.from('canciones').update({tabs:db.canciones[ci].tabs}).eq('id',db.canciones[ci].id);
-  el.querySelector('.tab-cell-val').textContent=val.trim()===''?'─':val.trim();
+
+async function addTab(ci){
+  if(!db.canciones[ci].tabs)db.canciones[ci].tabs=[];
+  db.canciones[ci].tabs.push({nombre:'',strings:[[],[],[],[],[],[]],nota:''});
+  await supa.from('canciones').update({tabs:db.canciones[ci].tabs}).eq('id',db.canciones[ci].id);
+  renderCanciones();reopenSong(ci,currentWho==='Guit 1era'?'mi-parte':'guit-1era');
+}
+async function deleteTab(ci,ti){
+  db.canciones[ci].tabs.splice(ti,1);
+  await supa.from('canciones').update({tabs:db.canciones[ci].tabs}).eq('id',db.canciones[ci].id);
+  renderCanciones();reopenSong(ci,currentWho==='Guit 1era'?'mi-parte':'guit-1era');
+}
+async function saveTabName(ci,ti,val){
+  if(!db.canciones[ci].tabs||!db.canciones[ci].tabs[ti])return;
+  db.canciones[ci].tabs[ti].nombre=val;
+  await supa.from('canciones').update({tabs:db.canciones[ci].tabs}).eq('id',db.canciones[ci].id);
+}
+async function saveTabNota(ci,ti,val){
+  if(!db.canciones[ci].tabs||!db.canciones[ci].tabs[ti])return;
+  db.canciones[ci].tabs[ti].nota=val;
+  await supa.from('canciones').update({tabs:db.canciones[ci].tabs}).eq('id',db.canciones[ci].id);
+}
+async function addTabCol(ci,ti){
+  const t=db.canciones[ci].tabs[ti];
+  if(!t.strings)t.strings=[[],[],[],[],[],[]];
+  t.strings.forEach(s=>s.push(''));
+  await supa.from('canciones').update({tabs:db.canciones[ci].tabs}).eq('id',db.canciones[ci].id);
+  renderCanciones();reopenSong(ci,currentWho==='Guit 1era'?'mi-parte':'guit-1era');
+}
+async function removeTabCol(ci,ti){
+  const t=db.canciones[ci].tabs[ti];
+  if(!t.strings||t.strings[0].length<=1)return;
+  t.strings.forEach(s=>s.pop());
+  await supa.from('canciones').update({tabs:db.canciones[ci].tabs}).eq('id',db.canciones[ci].id);
+  renderCanciones();reopenSong(ci,currentWho==='Guit 1era'?'mi-parte':'guit-1era');
 }
 
 function buildGuitPanel(c,ci,member){
