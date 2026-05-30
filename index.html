@@ -323,7 +323,7 @@ function subscribeRealtime(){
   supa.channel('db-changes')
     .on('postgres_changes',{event:'*',schema:'public',table:'canciones'},async()=>{
       const{data}=await supa.from('canciones').select('*').order('created_at');
-      if(data){db.canciones=data;renderCanciones();}
+      if(data){db.canciones=data;}
     })
     .on('postgres_changes',{event:'*',schema:'public',table:'sesiones'},async()=>{
       const{data}=await supa.from('sesiones').select('*').order('fecha',{ascending:false});
@@ -576,13 +576,13 @@ function buildTabEditor(c,ci){
   tabs.forEach((t,ti)=>{
     const strings=t.strings||[[],[],[],[],[],[]];
     const cols=Math.max(...strings.map(s=>s.length),4);
-    tabsHtml+=`<div class="tab-section">
+    tabsHtml+=`<div class="tab-section" id="tab-section-${ci}-${ti}">
       <div class="tab-section-header">
-        <input class="tab-name-input" value="${esc(t.nombre||'')}" placeholder="Nombre (ej: Solo intro, Lick coro...)" onblur="saveTabName(${ci},${ti},this.value)">
+        <input class="tab-name-input" id="tab-name-${ci}-${ti}" value="${esc(t.nombre||'')}" placeholder="Nombre (ej: Solo intro, Lick coro...)">
         <button class="btn-ghost sm danger" onclick="deleteTab(${ci},${ti})">✕</button>
       </div>
       <div class="tab-grid">
-        <div class="tab-strings">
+        <div class="tab-strings" id="tab-strings-${ci}-${ti}">
           ${['e','B','G','D','A','E'].map((s,si)=>`
             <div class="tab-row">
               <div class="tab-string-label">${s}</div>
@@ -590,20 +590,22 @@ function buildTabEditor(c,ci){
                 ${Array.from({length:cols},(_,col)=>{
                   const v=(strings[si]&&strings[si][col]!=null)?strings[si][col]:'';
                   return`<input class="tab-cell-input" type="text" inputmode="numeric"
+                    id="tc-${ci}-${ti}-${si}-${col}"
                     value="${esc(v)}" placeholder="─" maxlength="3"
-                    onchange="saveTabCell(${ci},${ti},${si},${col},this.value)"
                     onfocus="this.select()">`;
                 }).join('')}
               </div>
             </div>`).join('')}
         </div>
       </div>
-      <div style="display:flex;gap:8px;margin-top:8px;">
+      <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
         <button class="btn-ghost sm" onclick="addTabCol(${ci},${ti})">+ Columna</button>
-        <button class="btn-ghost sm danger" onclick="removeTabCol(${ci},${ti})" ${cols<=1?'disabled':''}>− Columna</button>
+        <button class="btn-ghost sm" onclick="removeTabCol(${ci},${ti})" ${cols<=1?'disabled':''}>− Columna</button>
+        <button class="btn-primary sm" onclick="saveTab(${ci},${ti})">💾 Guardar tablatura</button>
+        <span class="tab-saved-msg" id="tab-saved-${ci}-${ti}" style="font-size:11px;color:var(--accent);align-self:center;display:none;">✓ Guardado</span>
       </div>
       <div class="slabel">Notas del lick</div>
-      <textarea placeholder="Técnica, digitación, referencia..." style="min-height:36px;font-size:12px;" onblur="saveTabNota(${ci},${ti},this.value)">${esc(t.nota||'')}</textarea>
+      <textarea id="tab-nota-${ci}-${ti}" placeholder="Técnica, digitación, referencia..." style="min-height:36px;font-size:12px;">${esc(t.nota||'')}</textarea>
     </div>`;
   });
   return`<div>
@@ -612,14 +614,32 @@ function buildTabEditor(c,ci){
   </div>`;
 }
 
-async function saveTabCell(ci,ti,si,col,val){
-  if(!db.canciones[ci].tabs)return;
+async function saveTab(ci,ti){
+  if(!db.canciones[ci].tabs||!db.canciones[ci].tabs[ti])return;
   const t=db.canciones[ci].tabs[ti];
-  if(!t)return;
-  if(!t.strings)t.strings=[[],[],[],[],[],[]];
-  while(t.strings[si].length<=col)t.strings[si].push('');
-  t.strings[si][col]=val.trim();
+  // Read nombre
+  const nameEl=document.getElementById('tab-name-'+ci+'-'+ti);
+  if(nameEl)t.nombre=nameEl.value.trim();
+  // Read nota
+  const notaEl=document.getElementById('tab-nota-'+ci+'-'+ti);
+  if(notaEl)t.nota=notaEl.value.trim();
+  // Read all cells
+  const strings=t.strings||[[],[],[],[],[],[]];
+  const cols=Math.max(...strings.map(s=>s.length));
+  ['e','B','G','D','A','E'].forEach((_,si)=>{
+    for(let col=0;col<cols;col++){
+      const el=document.getElementById('tc-'+ci+'-'+ti+'-'+si+'-'+col);
+      if(el){
+        while(strings[si].length<=col)strings[si].push('');
+        strings[si][col]=el.value.trim();
+      }
+    }
+  });
+  t.strings=strings;
   await supa.from('canciones').update({tabs:db.canciones[ci].tabs}).eq('id',db.canciones[ci].id);
+  // Show saved feedback without re-rendering
+  const msg=document.getElementById('tab-saved-'+ci+'-'+ti);
+  if(msg){msg.style.display='inline';setTimeout(()=>msg.style.display='none',2000);}
 }
 
 async function addTab(ci){
@@ -629,19 +649,10 @@ async function addTab(ci){
   renderCanciones();reopenSong(ci,currentWho==='Guit 1era'?'mi-parte':'guit-1era');
 }
 async function deleteTab(ci,ti){
+  if(!confirm('¿Eliminar esta tablatura?'))return;
   db.canciones[ci].tabs.splice(ti,1);
   await supa.from('canciones').update({tabs:db.canciones[ci].tabs}).eq('id',db.canciones[ci].id);
   renderCanciones();reopenSong(ci,currentWho==='Guit 1era'?'mi-parte':'guit-1era');
-}
-async function saveTabName(ci,ti,val){
-  if(!db.canciones[ci].tabs||!db.canciones[ci].tabs[ti])return;
-  db.canciones[ci].tabs[ti].nombre=val;
-  await supa.from('canciones').update({tabs:db.canciones[ci].tabs}).eq('id',db.canciones[ci].id);
-}
-async function saveTabNota(ci,ti,val){
-  if(!db.canciones[ci].tabs||!db.canciones[ci].tabs[ti])return;
-  db.canciones[ci].tabs[ti].nota=val;
-  await supa.from('canciones').update({tabs:db.canciones[ci].tabs}).eq('id',db.canciones[ci].id);
 }
 async function addTabCol(ci,ti){
   const t=db.canciones[ci].tabs[ti];
