@@ -159,6 +159,24 @@ select option{background:var(--bg3);}
 .member-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
 .dot-gv{background:#8b5cf6;}.dot-g1{background:#f97316;}.dot-bat{background:#ef4444;}.dot-bas{background:#06b6d4;}
 
+/* TABLATURA */
+.tab-section{background:var(--bg4);border:1px solid var(--border);border-radius:var(--radius-lg);padding:12px;margin-bottom:12px;}
+.tab-section-header{display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+.tab-name-input{flex:1;font-size:13px;font-weight:500;background:transparent;border:none;border-bottom:1px solid var(--border2);border-radius:0;padding:3px 0;color:var(--text);font-family:var(--font-head);}
+.tab-name-input:focus{outline:none;border-bottom-color:var(--accent);}
+.tab-grid{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.tab-strings{display:flex;flex-direction:column;gap:0;font-family:var(--font-body);min-width:max-content;}
+.tab-row{display:flex;align-items:center;border-bottom:1px solid rgba(255,255,255,0.06);}
+.tab-row:last-child{border-bottom:none;}
+.tab-string-label{width:24px;font-size:12px;font-weight:600;color:var(--accent);text-align:center;flex-shrink:0;padding:6px 0;}
+.tab-cells{display:flex;align-items:center;gap:0;}
+.tab-cell{min-width:32px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;border-right:1px solid rgba(255,255,255,0.06);transition:background .1s;}
+.tab-cell:hover{background:rgba(200,240,96,0.1);}
+.tab-cell-val{font-size:13px;color:var(--text);font-family:var(--font-body);}
+.tab-cell:hover .tab-cell-val{color:var(--accent);}
+.tab-add-col{height:36px;width:28px;background:none;border:none;border-left:1px dashed var(--border2);color:var(--text3);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.tab-add-col:hover{color:var(--accent);background:rgba(200,240,96,0.08);}
+
 /* SESIONES */
 .sesion-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-xl);padding:16px 18px;margin-bottom:10px;}
 .sesion-date{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;}
@@ -550,6 +568,81 @@ function buildPedalChecklist(c,ci,member,list){
   return`<div class="pedal-list">${items}</div>`;
 }
 
+function buildTabEditor(c,ci){
+  const tabs=c.tabs||[];
+  let tabsHtml='';
+  if(!tabs.length){
+    tabsHtml='<div style="font-size:12px;color:var(--text2);margin-bottom:8px;">Sin tablaturas. Agrega una.</div>';
+  }
+  tabs.forEach((t,ti)=>{
+    tabsHtml+=`<div class="tab-section">
+      <div class="tab-section-header">
+        <input class="tab-name-input" value="${esc(t.nombre||'')}" placeholder="Nombre (ej: Solo intro, Lick coro...)" onblur="saveTabName(${ci},${ti},this.value)">
+        <button class="btn-ghost sm danger" onclick="deleteTab(${ci},${ti})">✕</button>
+      </div>
+      <div class="tab-grid">
+        <div class="tab-strings">
+          ${['e','B','G','D','A','E'].map((s,si)=>`
+            <div class="tab-row">
+              <div class="tab-string-label">${s}</div>
+              <div class="tab-cells" id="tab-cells-${ci}-${ti}-${si}">
+                ${(t.strings&&t.strings[si]||[]).map((v,col)=>`
+                  <div class="tab-cell" onclick="editTabCell(${ci},${ti},${si},${col},this)">
+                    <span class="tab-cell-val">${v===''?'─':v}</span>
+                  </div>`).join('')}
+                <button class="tab-add-col" onclick="addTabCol(${ci},${ti})">+</button>
+              </div>
+            </div>`).join('')}
+        </div>
+      </div>
+      <div class="slabel">Notas del lick</div>
+      <textarea placeholder="Técnica, digitación, referencia..." style="min-height:36px;font-size:12px;" onblur="saveTabNota(${ci},${ti},this.value)">${esc(t.nota||'')}</textarea>
+    </div>`;
+  });
+  return`<div>
+    ${tabsHtml}
+    <button class="btn-ghost" onclick="addTab(${ci})">+ Agregar tablatura</button>
+  </div>`;
+}
+
+function addTab(ci){
+  if(!db.canciones[ci].tabs)db.canciones[ci].tabs=[];
+  db.canciones[ci].tabs.push({nombre:'',strings:[[''],[''],[''],[''],[''],['']] ,nota:''});
+  supa.from('canciones').update({tabs:db.canciones[ci].tabs}).eq('id',db.canciones[ci].id);
+  renderCanciones();reopenSong(ci,'guit-1era');
+  if(currentWho==='Guit 1era')reopenSong(ci,'mi-parte');
+}
+function deleteTab(ci,ti){
+  db.canciones[ci].tabs.splice(ti,1);
+  supa.from('canciones').update({tabs:db.canciones[ci].tabs}).eq('id',db.canciones[ci].id);
+  renderCanciones();reopenSong(ci,'guit-1era');
+}
+function saveTabName(ci,ti,val){
+  if(!db.canciones[ci].tabs[ti])return;
+  db.canciones[ci].tabs[ti].nombre=val;
+  supa.from('canciones').update({tabs:db.canciones[ci].tabs}).eq('id',db.canciones[ci].id);
+}
+function saveTabNota(ci,ti,val){
+  if(!db.canciones[ci].tabs[ti])return;
+  db.canciones[ci].tabs[ti].nota=val;
+  supa.from('canciones').update({tabs:db.canciones[ci].tabs}).eq('id',db.canciones[ci].id);
+}
+function addTabCol(ci,ti){
+  const t=db.canciones[ci].tabs[ti];
+  t.strings.forEach(s=>s.push(''));
+  supa.from('canciones').update({tabs:db.canciones[ci].tabs}).eq('id',db.canciones[ci].id);
+  renderCanciones();reopenSong(ci,'guit-1era');
+  if(currentWho==='Guit 1era')reopenSong(ci,'mi-parte');
+}
+function editTabCell(ci,ti,si,col,el){
+  const cur=db.canciones[ci].tabs[ti].strings[si][col];
+  const val=prompt('Traste (número, 0 = al aire, vacío = silencio):', cur==='─'?'':cur);
+  if(val===null)return;
+  db.canciones[ci].tabs[ti].strings[si][col]=val.trim();
+  supa.from('canciones').update({tabs:db.canciones[ci].tabs}).eq('id',db.canciones[ci].id);
+  el.querySelector('.tab-cell-val').textContent=val.trim()===''?'─':val.trim();
+}
+
 function buildGuitPanel(c,ci,member){
   const notas=c.notas||{};
   const capKey='g1_capsula';
@@ -567,6 +660,8 @@ function buildGuitPanel(c,ci,member){
     ${buildPedalChecklist(c,ci,member)}
     <div class="slabel">Notas de ejecución</div>
     <textarea placeholder="Técnica, variaciones, posición en el mástil..." onblur="saveNota(${ci},'${member}',this.value)">${esc(notas[member]||'')}</textarea>
+    <div class="slabel">Tablaturas — solos y licks</div>
+    ${buildTabEditor(c,ci)}
   </div>`;
 }
 
@@ -741,7 +836,7 @@ async function deleteCancion(ci){
 }
 async function saveCancion(){
   const titulo=document.getElementById('nc-titulo').value.trim();if(!titulo)return;
-  const nueva={titulo,tono:document.getElementById('nc-tono').value.trim(),bpm:document.getElementById('nc-bpm').value||null,lista:false,bloques:[],notas:{},pedales:{},bkit:{},nota_general:''};
+  const nueva={titulo,tono:document.getElementById('nc-tono').value.trim(),bpm:document.getElementById('nc-bpm').value||null,lista:false,bloques:[],notas:{},pedales:{},bkit:{},nota_general:'',tabs:[]};
   const{data}=await supa.from('canciones').insert(nueva).select().single();
   if(data){db.canciones.push(data);renderCanciones();}
 }
