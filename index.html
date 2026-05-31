@@ -960,7 +960,7 @@ function reopenSong(ci,tab){
 }
 
 // ── TELEPROMPTER ──
-let tpPlaying=false,tpAnim=null,tpSpeed=3;
+let tpPlaying=false,tpAnim=null,tpSpeed=3,tpPos=0;
 
 function openTP(ci){
   const c=db.canciones[ci];
@@ -989,6 +989,7 @@ function openTP(ci){
     });
   });
   content.innerHTML=html;
+  tpPos=0;
   stage.scrollTop=0;
   tpPlaying=false;
   document.getElementById('tp-playbtn').textContent='▶ Play';
@@ -1020,6 +1021,7 @@ function togglePlay(){
 }
 
 function resetTP(){
+  tpPos=0;
   const stage=document.getElementById('tp-stage');
   stage.scrollTop=0;
   document.getElementById('tp-progress').style.width='0%';
@@ -1033,12 +1035,13 @@ function animateTP(){
   const max=stage.scrollHeight-stage.clientHeight;
   if(max<=0){tpPlaying=false;return;}
   const speed=parseInt(document.getElementById('tp-speed').value)||3;
-  stage.scrollTop+=speed/60;
-  document.getElementById('tp-progress').style.width=(stage.scrollTop/max*100)+'%';
-  if(stage.scrollTop>=max){tpPlaying=false;document.getElementById('tp-playbtn').textContent='▶ Play';return;}
+  tpPos+=speed*0.5;
+  if(tpPos>max)tpPos=max;
+  stage.scrollTop=tpPos;
+  document.getElementById('tp-progress').style.width=(tpPos/max*100)+'%';
+  if(tpPos>=max){tpPlaying=false;document.getElementById('tp-playbtn').textContent='▶ Play';return;}
   tpAnim=requestAnimationFrame(animateTP);
 }
-
 
 // ── SESIONES ──
 function renderSesiones(){
