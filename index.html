@@ -260,7 +260,7 @@ select option{background:var(--bg3);}
     <div class="tp-song-name" id="tp-title">—</div>
     <div class="tp-controls">
       <span class="tp-speed-label">Vel</span>
-      <input type="range" class="tp-speed" id="tp-speed" min="20" max="800" value="80" step="20" oninput="updateSpeed()">
+      <input type="range" class="tp-speed" id="tp-speed" min="1" max="20" value="3" step="1" oninput="updateSpeed()">
       <button class="tp-btn play" id="tp-playbtn" onclick="togglePlay()">▶ Play</button>
       <button class="tp-btn" onclick="resetTP()">↺</button>
       <button class="tp-close" onclick="closeTP()">✕</button>
@@ -960,7 +960,7 @@ function reopenSong(ci,tab){
 }
 
 // ── TELEPROMPTER ──
-let tpPlaying=false,tpAnim=null,tpSpeed=80;
+let tpPlaying=false,tpAnim=null,tpSpeed=3;
 
 function openTP(ci){
   const c=db.canciones[ci];
@@ -1032,7 +1032,7 @@ function animateTP(){
   const stage=document.getElementById('tp-stage');
   const max=stage.scrollHeight-stage.clientHeight;
   if(max<=0){tpPlaying=false;return;}
-  stage.scrollTop+=tpSpeed/500;
+  stage.scrollTop+=tpSpeed/60;
   document.getElementById('tp-progress').style.width=(stage.scrollTop/max*100)+'%';
   if(stage.scrollTop>=max){tpPlaying=false;document.getElementById('tp-playbtn').textContent='▶ Play';return;}
   tpAnim=requestAnimationFrame(animateTP);
