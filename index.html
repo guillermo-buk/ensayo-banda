@@ -260,7 +260,9 @@ select option{background:var(--bg3);}
     <div class="tp-song-name" id="tp-title">—</div>
     <div class="tp-controls">
       <span class="tp-speed-label">Vel</span>
-      <input type="range" class="tp-speed" id="tp-speed" min="1" max="20" value="3" step="1" oninput="updateSpeed()">
+      <button class="tp-btn" onclick="changeSpeed(-1)" style="padding:7px 12px;font-size:16px;line-height:1;">−</button>
+      <span id="tp-speed-val" style="font-size:13px;color:#fff;min-width:24px;text-align:center;">3</span>
+      <button class="tp-btn" onclick="changeSpeed(1)" style="padding:7px 12px;font-size:16px;line-height:1;">+</button>
       <button class="tp-btn play" id="tp-playbtn" onclick="togglePlay()">▶ Play</button>
       <button class="tp-btn" onclick="resetTP()">↺</button>
       <button class="tp-close" onclick="closeTP()">✕</button>
@@ -1010,8 +1012,10 @@ function closeTP(){
   tpPlaying=false;
 }
 
-function updateSpeed(){
-  tpSpeed=parseInt(document.getElementById('tp-speed').value);
+function changeSpeed(delta){
+  tpSpeed=Math.max(1,Math.min(20,tpSpeed+delta));
+  const el=document.getElementById('tp-speed-val');
+  if(el)el.textContent=tpSpeed;
 }
 
 function togglePlay(){
@@ -1034,7 +1038,7 @@ function animateTP(){
   const stage=document.getElementById('tp-stage');
   const max=stage.scrollHeight-stage.clientHeight;
   if(max<=0){tpPlaying=false;return;}
-  const speed=parseInt(document.getElementById('tp-speed').value)||3;
+  const speed=tpSpeed||3;
   tpPos+=speed*0.25;
   if(tpPos>max)tpPos=max;
   stage.scrollTop=tpPos;
