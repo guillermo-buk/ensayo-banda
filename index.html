@@ -1032,7 +1032,8 @@ function animateTP(){
   const stage=document.getElementById('tp-stage');
   const max=stage.scrollHeight-stage.clientHeight;
   if(max<=0){tpPlaying=false;return;}
-  stage.scrollTop+=tpSpeed/60;
+  const speed=parseInt(document.getElementById('tp-speed').value)||3;
+  stage.scrollTop+=speed/60;
   document.getElementById('tp-progress').style.width=(stage.scrollTop/max*100)+'%';
   if(stage.scrollTop>=max){tpPlaying=false;document.getElementById('tp-playbtn').textContent='▶ Play';return;}
   tpAnim=requestAnimationFrame(animateTP);
