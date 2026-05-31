@@ -1035,7 +1035,7 @@ function animateTP(){
   const max=stage.scrollHeight-stage.clientHeight;
   if(max<=0){tpPlaying=false;return;}
   const speed=parseInt(document.getElementById('tp-speed').value)||3;
-  tpPos+=speed*0.5;
+  tpPos+=speed*0.25;
   if(tpPos>max)tpPos=max;
   stage.scrollTop=tpPos;
   document.getElementById('tp-progress').style.width=(tpPos/max*100)+'%';
