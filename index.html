@@ -164,22 +164,32 @@ select option{background:var(--bg3);}
 .member-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
 .dot-gv{background:#8b5cf6;}.dot-g1{background:#f97316;}.dot-bat{background:#ef4444;}.dot-bas{background:#06b6d4;}
 
-/* TABLATURA */
+/* SCALE GUIDE */
+.scale-guide-box{background:var(--bg4);border:1px solid var(--border);border-radius:var(--radius-lg);padding:12px;margin-bottom:4px;}
+.sg-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.sg-section-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;}
+.sg-estilo-btns{display:flex;gap:5px;flex-wrap:wrap;}
+.sg-btn-estilo{font-family:var(--font-body);font-size:11px;padding:4px 12px;border-radius:20px;border:1px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;transition:all .15s;}
+.sg-btn-estilo:hover{border-color:var(--text3);color:var(--text);}
+.sg-btn-estilo.active{background:var(--accent);color:#0e0e10;border-color:var(--accent);font-weight:500;}
+.sg-acorde-select{font-family:var(--font-body);font-size:13px;font-weight:600;padding:5px 10px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg3);color:var(--accent);width:auto;}
+.sg-scales-wrap{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-top:12px;}
+.sg-scale-card{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:10px;}
+.sg-scale-name{font-family:var(--font-head);font-size:12px;font-weight:700;color:var(--text);margin-bottom:2px;}
+.sg-scale-notas{font-size:10px;color:var(--accent);margin-bottom:8px;font-family:var(--font-body);}
+.sg-fretboard{display:flex;flex-direction:column;gap:2px;}
+.sg-string-row{display:flex;align-items:center;gap:3px;}
+.sg-string-label{font-size:11px;font-weight:600;color:var(--accent);width:14px;text-align:center;flex-shrink:0;}
+.sg-dot{width:20px;height:20px;border-radius:50%;border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:10px;color:transparent;background:var(--bg4);}
+.sg-dot.on{background:var(--accent2);border-color:var(--accent2);color:#fff;font-size:8px;}
+@media(max-width:520px){.sg-scales-wrap{grid-template-columns:1fr 1fr;}}
 .tab-section{background:var(--bg4);border:1px solid var(--border);border-radius:var(--radius-lg);padding:12px;margin-bottom:12px;}
-.tab-section-header{display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+.tab-section-header{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
 .tab-name-input{flex:1;font-size:13px;font-weight:500;background:transparent;border:none;border-bottom:1px solid var(--border2);border-radius:0;padding:3px 0;color:var(--text);font-family:var(--font-head);}
 .tab-name-input:focus{outline:none;border-bottom-color:var(--accent);}
-.tab-grid{overflow-x:auto;-webkit-overflow-scrolling:touch;}
-.tab-strings{display:flex;flex-direction:column;gap:0;font-family:var(--font-body);min-width:max-content;}
-.tab-row{display:flex;align-items:center;border-bottom:1px solid rgba(255,255,255,0.06);}
-.tab-row:last-child{border-bottom:none;}
-.tab-string-label{width:24px;font-size:12px;font-weight:600;color:var(--accent);text-align:center;flex-shrink:0;padding:6px 0;}
-.tab-cells{display:flex;align-items:center;gap:2px;}
-.tab-cell-input{width:36px;height:36px;text-align:center;font-size:13px;font-family:var(--font-body);color:var(--text);background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:0;cursor:pointer;transition:all .15s;}
-.tab-cell-input:focus{outline:none;border-color:var(--accent);background:var(--bg4);color:var(--accent);}
-.tab-cell-input::placeholder{color:var(--text3);}
-.tab-add-col{height:36px;width:28px;background:none;border:none;border-left:1px dashed var(--border2);color:var(--text3);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all .15s;}
-.tab-add-col:hover{color:var(--accent);background:rgba(200,240,96,0.08);}
+.tab-textarea{width:100%;min-height:160px;font-family:var(--font-body);font-size:13px;line-height:1.8;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius);color:var(--text);padding:12px;resize:vertical;white-space:pre;overflow-x:auto;tab-size:1;}
+.tab-textarea:focus{outline:none;border-color:rgba(200,240,96,0.4);background:var(--bg4);}
+.tab-textarea::placeholder{color:var(--text3);font-size:11px;line-height:1.6;}
 
 /* SESIONES */
 .sesion-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-xl);padding:16px 18px;margin-bottom:10px;}
@@ -605,6 +615,219 @@ function buildPedalChecklist(c,ci,member,list){
   return`<div class="pedal-list">${items}</div>`;
 }
 
+// ── SCALE GUIDE ──
+const ESTILOS=['Blues','Rock','Metal','Pop','Jazz','Funk'];
+
+// Scale patterns: array of 6 strings [E,A,D,G,B,e], each string is array of frets relative to root
+// fret numbers relative to root note position
+const SCALE_DB={
+  'Blues':[
+    {nombre:'Pentatónica menor + blue note',notas:'1 b3 4 b5 5 b7',patron:[
+      ['e','─','─','─','●','─','●'],
+      ['B','─','●','─','●','─','─'],
+      ['G','─','●','─','●','─','─'],
+      ['D','─','●','─','●','─','─'],
+      ['A','─','●','─','●','─','─'],
+      ['E','─','─','─','●','─','●'],
+    ]},
+    {nombre:'Escala de blues completa',notas:'1 2 b3 3 5 6',patron:[
+      ['e','─','●','─','●','●','─'],
+      ['B','─','●','●','─','●','─'],
+      ['G','●','─','●','●','─','─'],
+      ['D','─','●','●','─','●','─'],
+      ['A','─','●','─','●','●','─'],
+      ['E','─','●','─','●','●','─'],
+    ]},
+    {nombre:'Dórica',notas:'1 2 b3 4 5 6 b7',patron:[
+      ['e','─','●','─','●','●','─'],
+      ['B','─','●','●','─','●','─'],
+      ['G','─','●','─','●','─','●'],
+      ['D','─','●','─','●','●','─'],
+      ['A','─','●','●','─','●','─'],
+      ['E','─','●','─','●','●','─'],
+    ]},
+  ],
+  'Rock':[
+    {nombre:'Pentatónica menor',notas:'1 b3 4 5 b7',patron:[
+      ['e','─','─','─','●','─','●'],
+      ['B','─','●','─','─','●','─'],
+      ['G','─','●','─','─','●','─'],
+      ['D','─','●','─','─','●','─'],
+      ['A','─','●','─','─','●','─'],
+      ['E','─','─','─','●','─','●'],
+    ]},
+    {nombre:'Pentatónica mayor',notas:'1 2 3 5 6',patron:[
+      ['e','●','─','●','─','─','●'],
+      ['B','─','●','─','─','●','─'],
+      ['G','─','●','─','●','─','─'],
+      ['D','─','●','─','●','─','─'],
+      ['A','─','●','─','●','─','─'],
+      ['E','●','─','●','─','─','●'],
+    ]},
+    {nombre:'Mixolidia',notas:'1 2 3 4 5 6 b7',patron:[
+      ['e','●','─','●','─','●','●'],
+      ['B','─','●','─','●','─','●'],
+      ['G','─','●','─','●','●','─'],
+      ['D','─','●','─','●','─','●'],
+      ['A','─','●','─','●','─','●'],
+      ['E','●','─','●','─','●','●'],
+    ]},
+  ],
+  'Metal':[
+    {nombre:'Frigia dominante',notas:'1 b2 3 4 5 b6 b7',patron:[
+      ['e','●','●','─','●','─','●'],
+      ['B','─','●','●','─','●','─'],
+      ['G','─','●','─','●','─','●'],
+      ['D','─','●','●','─','●','─'],
+      ['A','─','●','●','─','●','─'],
+      ['E','●','●','─','●','─','●'],
+    ]},
+    {nombre:'Menor natural (Eólica)',notas:'1 2 b3 4 5 b6 b7',patron:[
+      ['e','─','●','─','●','●','─'],
+      ['B','─','●','●','─','●','─'],
+      ['G','─','●','─','●','─','●'],
+      ['D','─','●','─','●','●','─'],
+      ['A','─','●','─','●','─','●'],
+      ['E','─','●','─','●','●','─'],
+    ]},
+    {nombre:'Pentatónica menor',notas:'1 b3 4 5 b7',patron:[
+      ['e','─','─','─','●','─','●'],
+      ['B','─','●','─','─','●','─'],
+      ['G','─','●','─','─','●','─'],
+      ['D','─','●','─','─','●','─'],
+      ['A','─','●','─','─','●','─'],
+      ['E','─','─','─','●','─','●'],
+    ]},
+  ],
+  'Pop':[
+    {nombre:'Mayor (Jónica)',notas:'1 2 3 4 5 6 7',patron:[
+      ['e','●','─','●','─','●','●'],
+      ['B','─','●','─','●','─','●'],
+      ['G','─','●','─','●','●','─'],
+      ['D','─','●','─','●','─','●'],
+      ['A','─','●','─','●','─','●'],
+      ['E','●','─','●','─','●','●'],
+    ]},
+    {nombre:'Pentatónica mayor',notas:'1 2 3 5 6',patron:[
+      ['e','●','─','●','─','─','●'],
+      ['B','─','●','─','─','●','─'],
+      ['G','─','●','─','●','─','─'],
+      ['D','─','●','─','●','─','─'],
+      ['A','─','●','─','●','─','─'],
+      ['E','●','─','●','─','─','●'],
+    ]},
+    {nombre:'Menor melódica',notas:'1 2 b3 4 5 6 7',patron:[
+      ['e','─','●','─','●','●','─'],
+      ['B','─','●','●','─','●','●'],
+      ['G','─','●','─','●','─','●'],
+      ['D','─','●','─','●','●','─'],
+      ['A','─','●','─','●','─','●'],
+      ['E','─','●','─','●','●','─'],
+    ]},
+  ],
+  'Jazz':[
+    {nombre:'Mayor bebop',notas:'1 2 3 4 5 #5 6 7',patron:[
+      ['e','●','─','●','●','─','●'],
+      ['B','─','●','─','●','●','─'],
+      ['G','─','●','●','─','●','─'],
+      ['D','─','●','─','●','●','─'],
+      ['A','─','●','─','●','●','─'],
+      ['E','●','─','●','●','─','●'],
+    ]},
+    {nombre:'Lidio dominante',notas:'1 2 3 #4 5 6 b7',patron:[
+      ['e','●','─','●','─','●','●'],
+      ['B','─','●','─','●','●','─'],
+      ['G','─','●','●','─','●','─'],
+      ['D','─','●','─','●','─','●'],
+      ['A','─','●','─','●','─','●'],
+      ['E','●','─','●','─','●','●'],
+    ]},
+    {nombre:'Alterada',notas:'1 b2 b3 b4 b5 b6 b7',patron:[
+      ['e','●','●','─','●','●','─'],
+      ['B','─','●','●','─','●','●'],
+      ['G','●','─','●','●','─','●'],
+      ['D','─','●','●','─','●','─'],
+      ['A','─','●','●','─','●','●'],
+      ['E','●','●','─','●','●','─'],
+    ]},
+  ],
+  'Funk':[
+    {nombre:'Pentatónica menor',notas:'1 b3 4 5 b7',patron:[
+      ['e','─','─','─','●','─','●'],
+      ['B','─','●','─','─','●','─'],
+      ['G','─','●','─','─','●','─'],
+      ['D','─','●','─','─','●','─'],
+      ['A','─','●','─','─','●','─'],
+      ['E','─','─','─','●','─','●'],
+    ]},
+    {nombre:'Dórica',notas:'1 2 b3 4 5 6 b7',patron:[
+      ['e','─','●','─','●','●','─'],
+      ['B','─','●','●','─','●','─'],
+      ['G','─','●','─','●','─','●'],
+      ['D','─','●','─','●','●','─'],
+      ['A','─','●','●','─','●','─'],
+      ['E','─','●','─','●','●','─'],
+    ]},
+    {nombre:'Mixolidia',notas:'1 2 3 4 5 6 b7',patron:[
+      ['e','●','─','●','─','●','●'],
+      ['B','─','●','─','●','─','●'],
+      ['G','─','●','─','●','●','─'],
+      ['D','─','●','─','●','─','●'],
+      ['A','─','●','─','●','─','●'],
+      ['E','●','─','●','─','●','●'],
+    ]},
+  ],
+};
+
+const ACORDES_LISTA=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B','Cm','C#m','Dm','D#m','Em','Fm','F#m','Gm','G#m','Am','A#m','Bm'];
+
+let scaleGuideState={};
+
+function buildScaleGuide(ci){
+  const state=scaleGuideState[ci]||{estilo:'Rock',acorde:'Am'};
+  const estiloBtns=ESTILOS.map(e=>`<button class="sg-btn-estilo${state.estilo===e?' active':''}" onclick="setSGEstilo(${ci},'${e}')">${e}</button>`).join('');
+  const acordeSelect=`<select class="sg-acorde-select" onchange="setSGAcorde(${ci},this.value)">
+    ${ACORDES_LISTA.map(a=>`<option value="${a}"${state.acorde===a?' selected':''}>${a}</option>`).join('')}
+  </select>`;
+  const escalas=SCALE_DB[state.estilo]||[];
+  const escalaCards=escalas.map(s=>`
+    <div class="sg-scale-card">
+      <div class="sg-scale-name">${s.nombre}</div>
+      <div class="sg-scale-notas">${s.notas}</div>
+      <div class="sg-fretboard">
+        ${s.patron.map(([cuerda,...dots])=>`
+          <div class="sg-string-row">
+            <div class="sg-string-label">${cuerda}</div>
+            ${dots.map(d=>`<div class="sg-dot${d==='●'?' on':''}">${d==='●'?'●':''}</div>`).join('')}
+          </div>`).join('')}
+      </div>
+    </div>`).join('');
+  return`<div>
+    <div class="sg-row">
+      <div class="sg-section-label">Estilo</div>
+      <div class="sg-estilo-btns">${estiloBtns}</div>
+    </div>
+    <div class="sg-row" style="margin-top:8px;">
+      <div class="sg-section-label">Acorde base</div>
+      ${acordeSelect}
+    </div>
+    <div class="sg-scales-wrap">${escalaCards}</div>
+  </div>`;
+}
+
+function setSGEstilo(ci,estilo){
+  if(!scaleGuideState[ci])scaleGuideState[ci]={estilo:'Rock',acorde:'Am'};
+  scaleGuideState[ci].estilo=estilo;
+  const box=document.getElementById('scale-guide-'+ci);
+  if(box)box.innerHTML=buildScaleGuide(ci);
+}
+function setSGAcorde(ci,acorde){
+  if(!scaleGuideState[ci])scaleGuideState[ci]={estilo:'Rock',acorde:'Am'};
+  scaleGuideState[ci].acorde=acorde;
+  const box=document.getElementById('scale-guide-'+ci);
+  if(box)box.innerHTML=buildScaleGuide(ci);
+}
+
 function buildTabEditor(c,ci){
   const tabs=c.tabs||[];
   let tabsHtml='';
@@ -612,34 +835,19 @@ function buildTabEditor(c,ci){
     tabsHtml='<div style="font-size:12px;color:var(--text2);margin-bottom:8px;">Sin tablaturas. Agrega una abajo.</div>';
   }
   tabs.forEach((t,ti)=>{
-    const strings=t.strings||[[],[],[],[],[],[]];
-    const cols=Math.max(...strings.map(s=>s.length),4);
     tabsHtml+=`<div class="tab-section" id="tab-section-${ci}-${ti}">
       <div class="tab-section-header">
         <input class="tab-name-input" id="tab-name-${ci}-${ti}" value="${esc(t.nombre||'')}" placeholder="Nombre (ej: Solo intro, Lick coro...)">
         <button class="btn-ghost sm danger" onclick="deleteTab(${ci},${ti})">✕</button>
       </div>
-      <div class="tab-grid">
-        <div class="tab-strings" id="tab-strings-${ci}-${ti}">
-          ${['e','B','G','D','A','E'].map((s,si)=>`
-            <div class="tab-row">
-              <div class="tab-string-label">${s}</div>
-              <div class="tab-cells">
-                ${Array.from({length:cols},(_,col)=>{
-                  const v=(strings[si]&&strings[si][col]!=null)?strings[si][col]:'';
-                  return`<input class="tab-cell-input" type="text" inputmode="numeric"
-                    id="tc-${ci}-${ti}-${si}-${col}"
-                    value="${esc(v)}" placeholder="─" maxlength="3"
-                    onfocus="this.select()">`;
-                }).join('')}
-              </div>
-            </div>`).join('')}
-        </div>
-      </div>
-      <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
-        <button class="btn-ghost sm" onclick="addTabCol(${ci},${ti})">+ Columna</button>
-        <button class="btn-ghost sm" onclick="removeTabCol(${ci},${ti})" ${cols<=1?'disabled':''}>− Columna</button>
-        <button class="btn-primary sm" onclick="saveTab(${ci},${ti})">💾 Guardar tablatura</button>
+      <textarea
+        id="tab-text-${ci}-${ti}"
+        class="tab-textarea"
+        placeholder="e|--0--2--3--2--0----|\nB|--1--3--3--3--1----|\nG|--0--2--4--2--0----|\nD|--2--0--5--0--2----|\nA|--3-----5-----3----|\nE|--------3----------|"
+        spellcheck="false"
+      >${esc(t.texto||'')}</textarea>
+      <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
+        <button class="btn-primary sm" onclick="saveTab(${ci},${ti})">💾 Guardar</button>
         <span class="tab-saved-msg" id="tab-saved-${ci}-${ti}" style="font-size:11px;color:var(--accent);align-self:center;display:none;">✓ Guardado</span>
       </div>
       <div class="slabel">Notas del lick</div>
@@ -655,84 +863,33 @@ function buildTabEditor(c,ci){
 async function saveTab(ci,ti){
   if(!db.canciones[ci].tabs||!db.canciones[ci].tabs[ti])return;
   const t=db.canciones[ci].tabs[ti];
-  // Read nombre
   const nameEl=document.getElementById('tab-name-'+ci+'-'+ti);
   if(nameEl)t.nombre=nameEl.value.trim();
-  // Read nota
+  const textEl=document.getElementById('tab-text-'+ci+'-'+ti);
+  if(textEl)t.texto=textEl.value;
   const notaEl=document.getElementById('tab-nota-'+ci+'-'+ti);
   if(notaEl)t.nota=notaEl.value.trim();
-  // Read all cells from DOM
-  const stringsEl=document.getElementById('tab-strings-'+ci+'-'+ti);
-  if(stringsEl){
-    const rows=stringsEl.querySelectorAll('.tab-row');
-    const newStrings=[];
-    rows.forEach((row,si)=>{
-      const inputs=row.querySelectorAll('.tab-cell-input');
-      const rowData=[];
-      inputs.forEach(inp=>rowData.push(inp.value.trim()));
-      newStrings.push(rowData);
-    });
-    t.strings=newStrings;
-  }
   await supa.from('canciones').update({tabs:db.canciones[ci].tabs}).eq('id',db.canciones[ci].id);
-  // Show saved feedback
   const msg=document.getElementById('tab-saved-'+ci+'-'+ti);
   if(msg){msg.style.display='inline';setTimeout(()=>msg.style.display='none',2000);}
 }
 
 async function addTab(ci){
   if(!db.canciones[ci].tabs)db.canciones[ci].tabs=[];
-  db.canciones[ci].tabs.push({nombre:'',strings:[[],[],[],[],[],[]],nota:''});
+  db.canciones[ci].tabs.push({nombre:'',texto:'',nota:''});
   await supa.from('canciones').update({tabs:db.canciones[ci].tabs}).eq('id',db.canciones[ci].id);
   renderCanciones();reopenSong(ci,currentWho==='Guit 1era'?'mi-parte':'guit-1era');
 }
 async function deleteTab(ci,ti){
-  if(!confirm('¿Eliminar esta tablatura?'))return;
+  if(!confirm('\u00bfEliminar esta tablatura?'))return;
   db.canciones[ci].tabs.splice(ti,1);
   await supa.from('canciones').update({tabs:db.canciones[ci].tabs}).eq('id',db.canciones[ci].id);
   renderCanciones();reopenSong(ci,currentWho==='Guit 1era'?'mi-parte':'guit-1era');
 }
-function addTabCol(ci,ti){
-  // Add column directly to DOM without re-rendering
-  const strings=['e','B','G','D','A','E'];
-  strings.forEach((_,si)=>{
-    const row=document.getElementById('tab-strings-'+ci+'-'+ti);
-    if(!row)return;
-    const cells=row.querySelectorAll('.tab-row')[si]?.querySelector('.tab-cells');
-    if(!cells)return;
-    // find current col count
-    const inputs=cells.querySelectorAll('.tab-cell-input');
-    const col=inputs.length;
-    const inp=document.createElement('input');
-    inp.className='tab-cell-input';
-    inp.type='text';
-    inp.inputMode='numeric';
-    inp.id=`tc-${ci}-${ti}-${si}-${col}`;
-    inp.placeholder='─';
-    inp.maxLength=3;
-    inp.addEventListener('focus',()=>inp.select());
-    // insert before the +col button
-    const addBtn=cells.querySelector('.tab-add-col');
-    cells.insertBefore(inp,addBtn);
-  });
-}
 
-function removeTabCol(ci,ti){
-  const strings=['e','B','G','D','A','E'];
-  // check min cols
-  const row=document.getElementById('tab-strings-'+ci+'-'+ti);
-  if(!row)return;
-  const firstCells=row.querySelectorAll('.tab-row')[0]?.querySelector('.tab-cells');
-  if(!firstCells)return;
-  const count=firstCells.querySelectorAll('.tab-cell-input').length;
-  if(count<=1)return;
-  strings.forEach((_,si)=>{
-    const cells=row.querySelectorAll('.tab-row')[si]?.querySelector('.tab-cells');
-    if(!cells)return;
-    const inputs=cells.querySelectorAll('.tab-cell-input');
-    if(inputs.length>0)inputs[inputs.length-1].remove();
-  });
-}
+function addTabCol(ci,ti){}
+function removeTabCol(ci,ti){}
+
 
 function buildGuitPanel(c,ci,member){
   const notas=c.notas||{};
@@ -751,6 +908,10 @@ function buildGuitPanel(c,ci,member){
     ${buildPedalChecklist(c,ci,member)}
     <div class="slabel">Notas de ejecución</div>
     <textarea placeholder="Técnica, variaciones, posición en el mástil..." onblur="saveNota(${ci},'${member}',this.value)">${esc(notas[member]||'')}</textarea>
+    <div class="slabel">Guía de escalas para improvisar</div>
+    <div id="scale-guide-${ci}" class="scale-guide-box">
+      ${buildScaleGuide(ci)}
+    </div>
     <div class="slabel">Tablaturas — solos y licks</div>
     ${buildTabEditor(c,ci)}
   </div>`;
