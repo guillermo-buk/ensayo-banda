@@ -1129,8 +1129,8 @@ const ESCALAS_DATA={
 
 // Standard tuning fret notes (EADGBE open = 0)
 // E2=0, A2=5, D3=10, G3=15, B3=19, E4=23 (semitones from E2)
-const OPEN_FRETS=[0,5,10,15,19,24]; // E A D G B e (low to high)
-const STRING_NAMES=['E','A','D','G','B','e'];
+const OPEN_FRETS=[24,19,15,10,5,0]; // e B G D A E (high to low)
+const STRING_NAMES=['e','B','G','D','A','E'];
 
 let sgEstilo='Rock';
 let sgAcorde='Am';
@@ -1170,10 +1170,15 @@ function buildMastil(root,intervalos,fretStart,numFrets){
 }
 
 function getFretStart(root){
-  // Find a good starting fret for the scale based on root on low E string
-  // Low E string open = E, so root fret = root note index
-  const baseE=[0,1,2,3,4,5,6,7,8,9,10,11]; // E F F# G G# A A# B C C# D D#
-  return baseE[root]||0;
+  // Low E string is open E (note index 4 in NOTAS = E)
+  // So fret N on E string = note (4 + N) % 12
+  // We want the fret where note == root on low E string
+  // root fret = (root - 4 + 12) % 12
+  // But we want the position in the 5th fret area (common pentatonic position)
+  // So if fret < 4, add 12 to get to the next octave position
+  let fret = (root - 4 + 12) % 12;
+  if(fret < 3) fret += 12; // push to higher position so scale is visible
+  return fret;
 }
 
 function renderEscalas(){
