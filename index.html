@@ -295,9 +295,9 @@ select option{background:var(--bg3);}
   <div class="tp-header">
     <div class="tp-song-name" id="tp-title">—</div>
     <div class="tp-controls">
-      <button class="tp-speed-btn" onclick="changeSpeed(-2)">－</button>
+      <button class="tp-speed-btn" onclick="changeSpeed(-1)">－</button>
       <span id="tp-speed-val" class="tp-speed-val">3</span>
-      <button class="tp-speed-btn" onclick="changeSpeed(2)">＋</button>
+      <button class="tp-speed-btn" onclick="changeSpeed(1)">＋</button>
       <button class="tp-btn play" id="tp-playbtn" onclick="togglePlay()">▶ Play</button>
       <button class="tp-btn" onclick="resetTP()">↺</button>
       <button class="tp-btn" onclick="closeTP();showTab('escalas')" title="Ver escalas">🎸</button>
@@ -389,7 +389,7 @@ function showTab(name){
 }
 
 function getSongTabs(){
-  if(currentWho==='todos') return['cifrado','acordes','guit-1era','vocal-guit','bateria','bass','general'];
+  if(currentWho==='todos') return['cifrado','guit-1era','acordes','vocal-guit','bateria','bass','general'];
   if(currentWho==='Vocal Guit'||currentWho==='Guit 1era') return['cifrado','acordes','mi-parte','general'];
   if(currentWho==='Batería') return['cifrado','acordes','mi-parte','general'];
   if(currentWho==='Bass') return['cifrado','acordes','mi-parte','general'];
