@@ -201,6 +201,10 @@ select option{background:var(--bg3);}
 .tp-song-name{font-family:var(--font-head);font-size:16px;font-weight:700;color:#fff;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .tp-controls{display:flex;align-items:center;gap:10px;flex-shrink:0;}
 .tp-speed-label{font-size:11px;color:rgba(255,255,255,.4);}
+.tp-speed-btn{font-size:24px;font-weight:300;width:48px;height:48px;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;transition:all .15s;flex-shrink:0;}
+.tp-speed-btn:hover{background:rgba(255,255,255,.2);}
+.tp-speed-btn:active{background:rgba(255,255,255,.3);transform:scale(0.92);}
+.tp-speed-val{font-size:15px;color:#fff;min-width:28px;text-align:center;font-family:var(--font-body);}
 .tp-speed{width:80px;}
 .tp-btn{font-family:var(--font-body);font-size:12px;padding:7px 14px;border-radius:var(--radius);border:1px solid rgba(255,255,255,.2);background:transparent;color:#fff;cursor:pointer;transition:all .15s;white-space:nowrap;}
 .tp-btn:hover{background:rgba(255,255,255,.1);}
@@ -244,13 +248,13 @@ select option{background:var(--bg3);}
 .mastil{overflow-x:auto;-webkit-overflow-scrolling:touch;}
 .mastil-inner{display:flex;flex-direction:column;gap:0;font-family:var(--font-body);min-width:max-content;}
 .mastil-fret-nums{display:flex;margin-left:24px;margin-bottom:4px;}
-.mastil-fret-num{width:36px;text-align:center;font-size:10px;color:var(--text3);}
+.mastil-fret-num{width:36px;text-align:center;font-size:10px;color:var(--text);}
 .mastil-row{display:flex;align-items:center;border-bottom:1px solid rgba(255,255,255,0.06);}
 .mastil-row:last-child{border-bottom:none;}
 .mastil-string-label{width:24px;font-size:12px;font-weight:600;color:var(--accent);text-align:center;flex-shrink:0;}
 .mastil-cell{width:36px;height:32px;display:flex;align-items:center;justify-content:center;border-right:1px solid rgba(255,255,255,0.08);}
 .mastil-cell:first-of-type{border-left:2px solid rgba(255,255,255,0.3);}
-.mastil-dot{width:20px;height:20px;border-radius:50%;background:transparent;}
+.mastil-dot{width:24px;height:24px;border-radius:50%;background:transparent;display:flex;align-items:center;justify-content:center;}
 .mastil-dot.root{background:var(--accent);box-shadow:0 0 8px rgba(200,240,96,0.5);}
 .mastil-dot.note{background:var(--accent2);opacity:0.85;}
 </style>
@@ -291,10 +295,12 @@ select option{background:var(--bg3);}
   <div class="tp-header">
     <div class="tp-song-name" id="tp-title">—</div>
     <div class="tp-controls">
-      <span class="tp-speed-label">Vel</span>
-      <input type="range" class="tp-speed" id="tp-speed" min="20" max="800" value="80" step="20" oninput="updateSpeed()">
+      <button class="tp-speed-btn" onclick="changeSpeed(-2)">－</button>
+      <span id="tp-speed-val" class="tp-speed-val">3</span>
+      <button class="tp-speed-btn" onclick="changeSpeed(2)">＋</button>
       <button class="tp-btn play" id="tp-playbtn" onclick="togglePlay()">▶ Play</button>
       <button class="tp-btn" onclick="resetTP()">↺</button>
+      <button class="tp-btn" onclick="closeTP();showTab('escalas')" title="Ver escalas">🎸</button>
       <button class="tp-close" onclick="closeTP()">✕</button>
     </div>
   </div>
@@ -383,7 +389,7 @@ function showTab(name){
 }
 
 function getSongTabs(){
-  if(currentWho==='todos') return['cifrado','acordes','vocal-guit','guit-1era','bateria','bass','general'];
+  if(currentWho==='todos') return['cifrado','acordes','guit-1era','vocal-guit','bateria','bass','general'];
   if(currentWho==='Vocal Guit'||currentWho==='Guit 1era') return['cifrado','acordes','mi-parte','general'];
   if(currentWho==='Batería') return['cifrado','acordes','mi-parte','general'];
   if(currentWho==='Bass') return['cifrado','acordes','mi-parte','general'];
@@ -910,7 +916,7 @@ function reopenSong(ci,tab){
 }
 
 // ── TELEPROMPTER ──
-let tpPlaying=false,tpAnim=null,tpSpeed=3,tpPos=0;
+let tpPlaying=false,tpAnim=null,tpSpeed=3,tpPos=0; // speed range 1-30
 
 function openTP(ci){
   const c=db.canciones[ci];
@@ -958,7 +964,7 @@ function closeTP(){
 }
 
 function changeSpeed(delta){
-  tpSpeed=Math.max(1,Math.min(20,tpSpeed+delta));
+  tpSpeed=Math.max(1,Math.min(30,tpSpeed+delta));
   const el=document.getElementById('tp-speed-val');
   if(el)el.textContent=tpSpeed;
 }
@@ -983,7 +989,9 @@ function animateTP(){
   const stage=document.getElementById('tp-stage');
   const max=stage.scrollHeight-stage.clientHeight;
   if(max<=0){tpPlaying=false;return;}
-  tpPos+=tpSpeed*0.25;
+  // Sync tpPos with actual scroll (allows manual scroll while playing)
+  tpPos=stage.scrollTop;
+  tpPos+=tpSpeed*0.15;
   if(tpPos>max)tpPos=max;
   stage.scrollTop=tpPos;
   document.getElementById('tp-progress').style.width=(tpPos/max*100)+'%';
@@ -1152,7 +1160,8 @@ function buildMastil(root,intervalos,fretStart,numFrets){
       const diff=(note-root+12)%12;
       const isRoot=diff===0;
       const isNote=intervalos.includes(diff);
-      return`<div class="mastil-cell"><div class="mastil-dot${isRoot?' root':isNote?' note':''}"></div></div>`;
+      const fretNum=isRoot||isNote?`<span style="font-size:9px;color:rgba(255,255,255,0.5);font-family:var(--font-body);line-height:1;">${fret}</span>`:'';
+      return`<div class="mastil-cell"><div class="mastil-dot${isRoot?' root':isNote?' note':''}">${fretNum}</div></div>`;
     }).join('');
     return`<div class="mastil-row">
       <div class="mastil-string-label">${s}</div>
