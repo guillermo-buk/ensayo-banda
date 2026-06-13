@@ -300,7 +300,7 @@ select option{background:var(--bg3);}
       <button class="tp-speed-btn" onclick="changeSpeed(1)">＋</button>
       <button class="tp-btn play" id="tp-playbtn" onclick="togglePlay()">▶ Play</button>
       <button class="tp-btn" onclick="resetTP()">↺</button>
-      <button class="tp-btn" onclick="closeTP();showTab('escalas')" title="Ver escalas">🎸</button>
+      <button class="tp-btn" onclick="goToEscalas()" title="Ver escalas">🎸</button>
       <button class="tp-close" onclick="closeTP()">✕</button>
     </div>
   </div>
@@ -759,6 +759,20 @@ function buildGeneralPanel(c,ci){
       <span style="font-size:14px;font-weight:500;">${esc(c.titulo)}</span>
       <button class="btn-ghost sm" onclick="renameSong(${ci})">✏ Renombrar</button>
     </div>
+    <div class="slabel">Tono y BPM</div>
+    <div class="grid3" style="margin-bottom:16px;">
+      <div class="form-field">
+        <div class="field-label">Tono</div>
+        <input id="edit-tono-${ci}" value="${esc(c.tono||'')}" placeholder="Am, C, G..." onblur="saveTonoBpm(${ci})">
+      </div>
+      <div class="form-field">
+        <div class="field-label">BPM</div>
+        <input id="edit-bpm-${ci}" type="number" value="${esc(c.bpm||'')}" placeholder="120" onblur="saveTonoBpm(${ci})">
+      </div>
+      <div style="display:flex;align-items:flex-end;">
+        <button class="btn-primary sm" onclick="saveTonoBpm(${ci})">Guardar</button>
+      </div>
+    </div>
     <div class="slabel">Estado</div>
     <div class="row-gap" style="margin-bottom:16px;">
       <button class="btn-ghost sm" onclick="toggleLista(${ci})">${c.lista?'↩ En progreso':'✓ Marcar lista'}</button>
@@ -902,6 +916,15 @@ async function saveCancion(){
   const{data}=await supa.from('canciones').insert(nueva).select().single();
   if(data){db.canciones.push(data);renderCanciones();}
 }
+async function saveTonoBpm(ci){
+  const tono=document.getElementById('edit-tono-'+ci)?.value.trim()||'';
+  const bpm=document.getElementById('edit-bpm-'+ci)?.value||null;
+  db.canciones[ci].tono=tono;
+  db.canciones[ci].bpm=bpm?parseInt(bpm):null;
+  await supa.from('canciones').update({tono,bpm:db.canciones[ci].bpm}).eq('id',db.canciones[ci].id);
+  renderCanciones();reopenSong(ci,'general');
+}
+
 async function renameSong(ci){
   const nuevo=prompt('Nuevo nombre:',db.canciones[ci].titulo);
   if(!nuevo||!nuevo.trim()||nuevo.trim()===db.canciones[ci].titulo)return;
@@ -918,7 +941,25 @@ function reopenSong(ci,tab){
 // ── TELEPROMPTER ──
 let tpPlaying=false,tpAnim=null,tpSpeed=3,tpPos=0; // speed range 1-30
 
+let tpCurrentCi=null; // track which song is open in TP
+
+function goToEscalas(){
+  // Set scale acorde from current song's tono
+  if(tpCurrentCi!==null){
+    const c=db.canciones[tpCurrentCi];
+    if(c&&c.tono){
+      // Extract root note from tono (e.g. "Am" -> "Am", "C#" -> "C#")
+      const match=c.tono.match(/^[A-G]#?m?/);
+      if(match)sgAcorde=match[0];
+      sgFretOffset={};
+    }
+  }
+  closeTP();
+  showTab('escalas');
+}
+
 function openTP(ci){
+  tpCurrentCi=ci;
   const c=db.canciones[ci];
   document.getElementById('tp-title').textContent=c.titulo+(c.tono?' — '+c.tono:'');
   const stage=document.getElementById('tp-stage');
