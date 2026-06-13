@@ -1030,9 +1030,10 @@ function animateTP(){
   const stage=document.getElementById('tp-stage');
   const max=stage.scrollHeight-stage.clientHeight;
   if(max<=0){tpPlaying=false;return;}
-  tpPos+=tpSpeed*0.5;
+  // Sync with manual scroll position
+  if(Math.abs(stage.scrollTop-Math.floor(tpPos))>2)tpPos=stage.scrollTop;
+  tpPos+=tpSpeed*0.2;
   if(tpPos>max)tpPos=max;
-  // Only assign if integer value changed (avoids iOS rounding no-ops)
   const newTop=Math.floor(tpPos);
   if(newTop!==stage.scrollTop)stage.scrollTop=newTop;
   document.getElementById('tp-progress').style.width=(tpPos/max*100)+'%';
