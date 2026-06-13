@@ -1030,11 +1030,11 @@ function animateTP(){
   const stage=document.getElementById('tp-stage');
   const max=stage.scrollHeight-stage.clientHeight;
   if(max<=0){tpPlaying=false;return;}
-  // Sync tpPos with actual scroll (allows manual scroll while playing)
-  tpPos=stage.scrollTop;
-  tpPos+=tpSpeed*0.15;
+  tpPos+=tpSpeed*0.5;
   if(tpPos>max)tpPos=max;
-  stage.scrollTop=tpPos;
+  // Only assign if integer value changed (avoids iOS rounding no-ops)
+  const newTop=Math.floor(tpPos);
+  if(newTop!==stage.scrollTop)stage.scrollTop=newTop;
   document.getElementById('tp-progress').style.width=(tpPos/max*100)+'%';
   if(tpPos>=max){tpPlaying=false;document.getElementById('tp-playbtn').textContent='▶ Play';return;}
   tpAnim=requestAnimationFrame(animateTP);
