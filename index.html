@@ -200,6 +200,10 @@ select option{background:var(--bg3);}
 .tp-song-name{font-family:var(--font-head);font-size:16px;font-weight:700;color:#fff;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .tp-controls{display:flex;align-items:center;gap:10px;flex-shrink:0;}
 .tp-speed-label{font-size:11px;color:rgba(255,255,255,.4);}
+.tp-speed-btn{font-size:24px;font-weight:300;width:48px;height:48px;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;transition:all .15s;flex-shrink:0;}
+.tp-speed-btn:hover{background:rgba(255,255,255,.2);}
+.tp-speed-btn:active{background:rgba(255,255,255,.3);transform:scale(0.92);}
+.tp-speed-val{font-size:15px;color:#fff;min-width:28px;text-align:center;font-family:var(--font-body);}
 .tp-speed{width:80px;}
 .tp-btn{font-family:var(--font-body);font-size:12px;padding:7px 14px;border-radius:var(--radius);border:1px solid rgba(255,255,255,.2);background:transparent;color:#fff;cursor:pointer;transition:all .15s;white-space:nowrap;}
 .tp-btn:hover{background:rgba(255,255,255,.1);}
@@ -225,6 +229,33 @@ select option{background:var(--bg3);}
   .tp-syllable{font-size:24px;}
   .tp-chord{font-size:17px;}
 }
+
+/* ── ESCALAS ── */
+.escalas-wrap{max-width:700px;}
+.escalas-controls{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:20px;}
+.escalas-group{display:flex;flex-direction:column;gap:6px;}
+.escalas-group-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;}
+.estilo-btns{display:flex;flex-wrap:wrap;gap:5px;}
+.estilo-btn{font-family:var(--font-body);font-size:12px;padding:5px 14px;border-radius:20px;border:1px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;transition:all .15s;}
+.estilo-btn:hover{border-color:var(--text3);color:var(--text);}
+.estilo-btn.active{background:var(--accent);color:#0e0e10;border-color:var(--accent);font-weight:500;}
+.acorde-select{font-family:var(--font-body);font-size:14px;font-weight:600;padding:6px 12px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg3);color:var(--accent);cursor:pointer;}
+.escalas-cards{display:flex;flex-direction:column;gap:16px;}
+.escala-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-xl);padding:16px 18px;}
+.escala-card-title{font-family:var(--font-head);font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px;}
+.escala-card-formula{font-size:11px;color:var(--accent);font-family:var(--font-body);margin-bottom:12px;}
+.mastil{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.mastil-inner{display:flex;flex-direction:column;gap:0;font-family:var(--font-body);min-width:max-content;}
+.mastil-fret-nums{display:flex;margin-left:24px;margin-bottom:4px;}
+.mastil-fret-num{width:36px;text-align:center;font-size:10px;color:var(--text);}
+.mastil-row{display:flex;align-items:center;border-bottom:1px solid rgba(255,255,255,0.06);}
+.mastil-row:last-child{border-bottom:none;}
+.mastil-string-label{width:24px;font-size:12px;font-weight:600;color:var(--accent);text-align:center;flex-shrink:0;}
+.mastil-cell{width:36px;height:32px;display:flex;align-items:center;justify-content:center;border-right:1px solid rgba(255,255,255,0.08);}
+.mastil-cell:first-of-type{border-left:2px solid rgba(255,255,255,0.3);}
+.mastil-dot{width:24px;height:24px;border-radius:50%;background:transparent;display:flex;align-items:center;justify-content:center;}
+.mastil-dot.root{background:var(--accent);box-shadow:0 0 8px rgba(200,240,96,0.5);}
+.mastil-dot.note{background:var(--accent2);opacity:0.85;}
 </style>
 </head>
 <body>
@@ -248,11 +279,13 @@ select option{background:var(--bg3);}
     <button class="nav-tab active" onclick="showTab('canciones')">Canciones</button>
     <button class="nav-tab" onclick="showTab('sesiones')">Sesiones</button>
     <button class="nav-tab" onclick="showTab('pendientes')">Pendientes</button>
+    <button class="nav-tab" onclick="showTab('escalas')">🎸 Escalas</button>
   </nav>
   <div class="main">
     <div id="tab-canciones" class="section active"></div>
     <div id="tab-sesiones" class="section"></div>
     <div id="tab-pendientes" class="section"></div>
+    <div id="tab-escalas" class="section"></div>
   </div>
 </div>
 
@@ -261,10 +294,12 @@ select option{background:var(--bg3);}
   <div class="tp-header">
     <div class="tp-song-name" id="tp-title">—</div>
     <div class="tp-controls">
-      <span class="tp-speed-label">Vel</span>
-      <input type="range" class="tp-speed" id="tp-speed" min="20" max="800" value="80" step="20" oninput="updateSpeed()">
+      <button class="tp-speed-btn" onclick="changeSpeed(-1)">－</button>
+      <span id="tp-speed-val" class="tp-speed-val">3</span>
+      <button class="tp-speed-btn" onclick="changeSpeed(1)">＋</button>
       <button class="tp-btn play" id="tp-playbtn" onclick="togglePlay()">▶ Play</button>
       <button class="tp-btn" onclick="resetTP()">↺</button>
+      <button class="tp-btn" onclick="goToEscalas()" title="Ver escalas">🎸</button>
       <button class="tp-close" onclick="closeTP()">✕</button>
     </div>
   </div>
@@ -275,12 +310,12 @@ select option{background:var(--bg3);}
 </div>
 
 <script>
-const PEDAL_LIST=['Compresor','Acoustic Simulator','Groove OD','Hot Tube','Flanger','Tremolo','Chorus','Phaser','Delay','Reverb','Octabador','Loop 360'];
+const PEDAL_LIST=['Compresor','Acoustic Simulator','Groove OD','Hot Tube','Flanger','Tremolo','Chorus','Phaser','Delay','Reverb','Octabador','Loop 360','Crush Laney'];
 const PEDAL_VOCAL=['Compresor','Distorsión','Reverb','Delay'];
 const CAPSULAS_VOCAL=['Neck','Bridge','Mid'];
 const CAPSULAS_G1=['Neck','Bridge','Mid','Mod Gilmour'];
 const BKIT_FIELDS=[['intro','Intro / fill entrada'],['groove','Groove principal'],['fill_pre_coro','Fill pre-coro'],['coro','Dinámica de coro'],['puente','Puente / break'],['redoble','Redobles / ornamentos'],['cierre','Cierre / final']];
-const TAB_LABELS={'cifrado':'📄 Letra + Cifrado','acordes':'🎵 Acordes','mi-parte':'Mi parte','vocal-guit':'Vocal Guit','guit-1era':'Guit 1era','bateria':'Batería','bass':'Bass','general':'General'};
+const TAB_LABELS={'cifrado':'📄 Letra','acordes':'🎵 Acordes','mi-parte':'Mi parte','vocal-guit':'Vocal Guit','guit-1era':'Guit 1era','bateria':'Batería','bass':'Bass','general':'General'};
 
 let db={canciones:[],sesiones:[],pendientes:[]};
 let currentWho='todos';
@@ -390,13 +425,14 @@ function setWho(who){
 }
 
 function showTab(name){
-  document.querySelectorAll('.nav-tab').forEach((t,i)=>t.classList.toggle('active',['canciones','sesiones','pendientes'][i]===name));
+  document.querySelectorAll('.nav-tab').forEach((t,i)=>t.classList.toggle('active',['canciones','sesiones','pendientes','escalas'][i]===name));
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
   document.getElementById('tab-'+name).classList.add('active');
+  if(name==='escalas')renderEscalas();
 }
 
 function getSongTabs(){
-  if(currentWho==='todos') return['cifrado','acordes','vocal-guit','guit-1era','bateria','bass','general'];
+  if(currentWho==='todos') return['cifrado','guit-1era','acordes','vocal-guit','bateria','bass','general'];
   if(currentWho==='Vocal Guit'||currentWho==='Guit 1era') return['cifrado','acordes','mi-parte','general'];
   if(currentWho==='Batería') return['cifrado','acordes','mi-parte','general'];
   if(currentWho==='Bass') return['cifrado','acordes','mi-parte','general'];
@@ -766,6 +802,20 @@ function buildGeneralPanel(c,ci){
       <span style="font-size:14px;font-weight:500;">${esc(c.titulo)}</span>
       <button class="btn-ghost sm" onclick="renameSong(${ci})">✏ Renombrar</button>
     </div>
+    <div class="slabel">Tono y BPM</div>
+    <div class="grid3" style="margin-bottom:16px;">
+      <div class="form-field">
+        <div class="field-label">Tono</div>
+        <input id="edit-tono-${ci}" value="${esc(c.tono||'')}" placeholder="Am, C, G..." onblur="saveTonoBpm(${ci})">
+      </div>
+      <div class="form-field">
+        <div class="field-label">BPM</div>
+        <input id="edit-bpm-${ci}" type="number" value="${esc(c.bpm||'')}" placeholder="120" onblur="saveTonoBpm(${ci})">
+      </div>
+      <div style="display:flex;align-items:flex-end;">
+        <button class="btn-primary sm" onclick="saveTonoBpm(${ci})">Guardar</button>
+      </div>
+    </div>
     <div class="slabel">Estado</div>
     <div class="row-gap" style="margin-bottom:16px;">
       <button class="btn-ghost sm" onclick="toggleLista(${ci})">${c.lista?'↩ En progreso':'✓ Marcar lista'}</button>
@@ -909,6 +959,15 @@ async function saveCancion(){
   const{data}=await supa.from('canciones').insert(nueva).select().single();
   if(data){db.canciones.push(data);renderCanciones();}
 }
+async function saveTonoBpm(ci){
+  const tono=document.getElementById('edit-tono-'+ci)?.value.trim()||'';
+  const bpm=document.getElementById('edit-bpm-'+ci)?.value||null;
+  db.canciones[ci].tono=tono;
+  db.canciones[ci].bpm=bpm?parseInt(bpm):null;
+  await supa.from('canciones').update({tono,bpm:db.canciones[ci].bpm}).eq('id',db.canciones[ci].id);
+  renderCanciones();reopenSong(ci,'general');
+}
+
 async function renameSong(ci){
   const nuevo=prompt('Nuevo nombre:',db.canciones[ci].titulo);
   if(!nuevo||!nuevo.trim()||nuevo.trim()===db.canciones[ci].titulo)return;
@@ -923,9 +982,27 @@ function reopenSong(ci,tab){
 }
 
 // ── TELEPROMPTER ──
-let tpPlaying=false,tpAnim=null,tpSpeed=80;
+let tpPlaying=false,tpAnim=null,tpSpeed=3,tpPos=0; // speed range 1-30
+
+let tpCurrentCi=null; // track which song is open in TP
+
+function goToEscalas(){
+  // Set scale acorde from current song's tono
+  if(tpCurrentCi!==null){
+    const c=db.canciones[tpCurrentCi];
+    if(c&&c.tono){
+      // Extract root note from tono (e.g. "Am" -> "Am", "C#" -> "C#")
+      const match=c.tono.match(/^[A-G]#?m?/);
+      if(match)sgAcorde=match[0];
+      sgFretOffset={};
+    }
+  }
+  closeTP();
+  showTab('escalas');
+}
 
 function openTP(ci){
+  tpCurrentCi=ci;
   const c=db.canciones[ci];
   document.getElementById('tp-title').textContent=c.titulo+(c.tono?' — '+c.tono:'');
   const stage=document.getElementById('tp-stage');
@@ -941,9 +1018,7 @@ function openTP(ci){
       line.split(' ').forEach(w=>{
         const p=w.split('|');
         if(p.length>=2){
-          const chord=p[0];
-          const syl=p.slice(1).join('|');
-          html+=`<span class="tp-word"><span class="tp-chord">${chord}</span><span class="tp-syllable">${syl}</span></span>`;
+          html+=`<span class="tp-word"><span class="tp-chord">${p[0]}</span><span class="tp-syllable">${p.slice(1).join('|')}</span></span>`;
         } else if(w.trim()){
           html+=`<span class="tp-word"><span class="tp-chord-empty"></span><span class="tp-syllable">${w}</span></span>`;
         }
@@ -953,15 +1028,15 @@ function openTP(ci){
   });
   content.innerHTML=html;
   stage.scrollTop=0;
+  tpPos=0;
   tpPlaying=false;
   document.getElementById('tp-playbtn').textContent='▶ Play';
   document.getElementById('tp-progress').style.width='0%';
   document.getElementById('tp-overlay').classList.add('active');
   document.body.style.overflow='hidden';
-  // update progress on manual scroll
   stage.onscroll=()=>{
     const max=stage.scrollHeight-stage.clientHeight;
-    if(max>0) document.getElementById('tp-progress').style.width=(stage.scrollTop/max*100)+'%';
+    if(max>0)document.getElementById('tp-progress').style.width=(stage.scrollTop/max*100)+'%';
   };
 }
 
@@ -972,8 +1047,10 @@ function closeTP(){
   tpPlaying=false;
 }
 
-function updateSpeed(){
-  tpSpeed=parseInt(document.getElementById('tp-speed').value);
+function changeSpeed(delta){
+  tpSpeed=Math.max(1,Math.min(30,tpSpeed+delta));
+  const el=document.getElementById('tp-speed-val');
+  if(el)el.textContent=tpSpeed;
 }
 
 function togglePlay(){
@@ -983,6 +1060,7 @@ function togglePlay(){
 }
 
 function resetTP(){
+  tpPos=0;
   const stage=document.getElementById('tp-stage');
   stage.scrollTop=0;
   document.getElementById('tp-progress').style.width='0%';
@@ -995,9 +1073,14 @@ function animateTP(){
   const stage=document.getElementById('tp-stage');
   const max=stage.scrollHeight-stage.clientHeight;
   if(max<=0){tpPlaying=false;return;}
-  stage.scrollTop+=tpSpeed/500;
-  document.getElementById('tp-progress').style.width=(stage.scrollTop/max*100)+'%';
-  if(stage.scrollTop>=max){tpPlaying=false;document.getElementById('tp-playbtn').textContent='▶ Play';return;}
+  // Sync with manual scroll position
+  if(Math.abs(stage.scrollTop-Math.floor(tpPos))>2)tpPos=stage.scrollTop;
+  tpPos+=tpSpeed*0.2;
+  if(tpPos>max)tpPos=max;
+  const newTop=Math.floor(tpPos);
+  if(newTop!==stage.scrollTop)stage.scrollTop=newTop;
+  document.getElementById('tp-progress').style.width=(tpPos/max*100)+'%';
+  if(tpPos>=max){tpPlaying=false;document.getElementById('tp-playbtn').textContent='▶ Play';return;}
   tpAnim=requestAnimationFrame(animateTP);
 }
 
@@ -1095,6 +1178,158 @@ async function savePend(){
   const nuevo={texto,quien:document.getElementById('np-quien').value,done:false};
   const{data}=await supa.from('pendientes').insert(nuevo).select().single();
   if(data){db.pendientes.push(data);renderPendientes();}
+}
+
+
+// ── GUÍA DE ESCALAS ──
+const ESTILOS_LIST=['Blues','Rock','Metal','Pop','Jazz','Funk'];
+const NOTAS=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+const ACORDES_ALL=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B','Cm','C#m','Dm','D#m','Em','Fm','F#m','Gm','G#m','Am','A#m','Bm'];
+
+// Scale intervals (semitones from root)
+const ESCALAS_DATA={
+  'Blues':[
+    {nombre:'Pentatónica menor + blue note',formula:'1 b3 4 b5 5 b7',intervalos:[0,3,5,6,7,10]},
+    {nombre:'Escala de blues (completa)',formula:'1 2 b3 3 4 5 6 b7',intervalos:[0,2,3,4,5,7,9,10]},
+    {nombre:'Dórica',formula:'1 2 b3 4 5 6 b7',intervalos:[0,2,3,5,7,9,10]},
+  ],
+  'Rock':[
+    {nombre:'Pentatónica menor',formula:'1 b3 4 5 b7',intervalos:[0,3,5,7,10]},
+    {nombre:'Pentatónica mayor',formula:'1 2 3 5 6',intervalos:[0,2,4,7,9]},
+    {nombre:'Mixolidia',formula:'1 2 3 4 5 6 b7',intervalos:[0,2,4,5,7,9,10]},
+  ],
+  'Metal':[
+    {nombre:'Frigia dominante',formula:'1 b2 3 4 5 b6 b7',intervalos:[0,1,4,5,7,8,10]},
+    {nombre:'Menor natural (Eólica)',formula:'1 2 b3 4 5 b6 b7',intervalos:[0,2,3,5,7,8,10]},
+    {nombre:'Pentatónica menor',formula:'1 b3 4 5 b7',intervalos:[0,3,5,7,10]},
+  ],
+  'Pop':[
+    {nombre:'Mayor (Jónica)',formula:'1 2 3 4 5 6 7',intervalos:[0,2,4,5,7,9,11]},
+    {nombre:'Pentatónica mayor',formula:'1 2 3 5 6',intervalos:[0,2,4,7,9]},
+    {nombre:'Menor melódica',formula:'1 2 b3 4 5 6 7',intervalos:[0,2,3,5,7,9,11]},
+  ],
+  'Jazz':[
+    {nombre:'Mayor bebop',formula:'1 2 3 4 5 #5 6 7',intervalos:[0,2,4,5,7,8,9,11]},
+    {nombre:'Lidio dominante',formula:'1 2 3 #4 5 6 b7',intervalos:[0,2,4,6,7,9,10]},
+    {nombre:'Alterada',formula:'1 b2 b3 b4 b5 b6 b7',intervalos:[0,1,3,4,6,8,10]},
+  ],
+  'Funk':[
+    {nombre:'Pentatónica menor',formula:'1 b3 4 5 b7',intervalos:[0,3,5,7,10]},
+    {nombre:'Dórica',formula:'1 2 b3 4 5 6 b7',intervalos:[0,2,3,5,7,9,10]},
+    {nombre:'Mixolidia',formula:'1 2 3 4 5 6 b7',intervalos:[0,2,4,5,7,9,10]},
+  ],
+};
+
+// Standard tuning fret notes (EADGBE open = 0)
+// E2=0, A2=5, D3=10, G3=15, B3=19, E4=23 (semitones from E2)
+// Correct open string notes as semitone indices (C=0): e=4, B=11, G=7, D=2, A=9, E=4
+const OPEN_FRETS=[4,11,7,2,9,4]; // e B G D A E (high to low)
+const STRING_NAMES=['e','B','G','D','A','E'];
+
+let sgEstilo='Rock';
+let sgAcorde='Am';
+let sgFretOffset={};
+
+function getAcordeRoot(acorde){
+  // Extract root note
+  const match=acorde.match(/^([A-G]#?)/);
+  return match?NOTAS.indexOf(match[1]):0;
+}
+
+function buildMastil(root,intervalos,fretStart,numFrets){
+  const rows=STRING_NAMES.map((s,si)=>{
+    const openNote=OPEN_FRETS[si];
+    const cells=Array.from({length:numFrets},(_,fi)=>{
+      const fret=fretStart+fi;
+      const note=(openNote+fret)%12;
+      const diff=(note-root+12)%12;
+      const isRoot=diff===0;
+      const isNote=intervalos.includes(diff);
+      const fretNum=isRoot||isNote?`<span style="font-size:9px;color:rgba(255,255,255,0.5);font-family:var(--font-body);line-height:1;">${fret}</span>`:'';
+      return`<div class="mastil-cell"><div class="mastil-dot${isRoot?' root':isNote?' note':''}">${fretNum}</div></div>`;
+    }).join('');
+    return`<div class="mastil-row">
+      <div class="mastil-string-label">${s}</div>
+      ${cells}
+    </div>`;
+  }).join('');
+
+  const fretNums=Array.from({length:numFrets},(_,fi)=>`<div class="mastil-fret-num">${fretStart+fi}</div>`).join('');
+
+  return`<div class="mastil">
+    <div class="mastil-inner">
+      <div class="mastil-fret-nums">${fretNums}</div>
+      ${rows}
+    </div>
+  </div>`;
+}
+
+function getFretStart(root){
+  // Find where root note falls on low E string (open = E = index 4)
+  // fret = (root - 4 + 12) % 12
+  let fret = (root - 4 + 12) % 12;
+  // If root is open string (fret 0) or very low, use next octave
+  if(fret === 0) fret = 12;
+  // Return one fret before so the tonic is visible with context
+  return Math.max(1, fret - 1);
+}
+
+function renderEscalas(){
+  const el=document.getElementById('tab-escalas');
+  if(!el)return;
+
+  const estiloBtns=ESTILOS_LIST.map(e=>`<button class="estilo-btn${sgEstilo===e?' active':''}" onclick="setEscalaEstilo('${e}')">${e}</button>`).join('');
+  const acordeOpts=ACORDES_ALL.map(a=>`<option value="${a}"${sgAcorde===a?' selected':''}>${a}</option>`).join('');
+
+  const root=getAcordeRoot(sgAcorde);
+  const baseFret=getFretStart(root);
+  const escalas=ESCALAS_DATA[sgEstilo]||[];
+
+  const cards=escalas.map((e,ei)=>{
+    const fretStart=sgFretOffset[ei]!==undefined?sgFretOffset[ei]:baseFret;
+    return`<div class="escala-card">
+      <div class="escala-card-title">${e.nombre}</div>
+      <div class="escala-card-formula">${e.formula}</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+        <button class="estilo-btn" onclick="moveFret(${ei},-1)" style="padding:4px 10px;">◀</button>
+        <span style="font-size:11px;color:var(--text3);">Traste ${fretStart}</span>
+        <button class="estilo-btn" onclick="moveFret(${ei},1)" style="padding:4px 10px;">▶</button>
+      </div>
+      ${buildMastil(root,e.intervalos,fretStart,13)}
+      <div style="margin-top:6px;font-size:10px;color:var(--text3);">
+        <span style="display:inline-flex;align-items:center;gap:4px;margin-right:12px;">
+          <span style="width:12px;height:12px;border-radius:50%;background:var(--accent);display:inline-block;"></span> Tónica
+        </span>
+        <span style="display:inline-flex;align-items:center;gap:4px;">
+          <span style="width:12px;height:12px;border-radius:50%;background:var(--accent2);display:inline-block;"></span> Nota de la escala
+        </span>
+      </div>
+    </div>`;
+  }).join('');
+
+  el.innerHTML=`<div class="escalas-wrap">
+    <div class="escalas-controls">
+      <div class="escalas-group">
+        <div class="escalas-group-label">Estilo</div>
+        <div class="estilo-btns">${estiloBtns}</div>
+      </div>
+      <div class="escalas-group">
+        <div class="escalas-group-label">Acorde / Tonalidad</div>
+        <select class="acorde-select" onchange="setEscalaAcorde(this.value)">${acordeOpts}</select>
+      </div>
+    </div>
+    <div class="escalas-cards">${cards}</div>
+  </div>`;
+}
+
+function setEscalaEstilo(e){sgEstilo=e;sgFretOffset={};renderEscalas();}
+function setEscalaAcorde(a){sgAcorde=a;sgFretOffset={};renderEscalas();}
+function moveFret(ei,delta){
+  const root=getAcordeRoot(sgAcorde);
+  const baseFret=getFretStart(root);
+  const current=sgFretOffset[ei]!==undefined?sgFretOffset[ei]:baseFret;
+  sgFretOffset[ei]=Math.max(0,Math.min(12,current+delta));
+  renderEscalas();
 }
 
 // ── INIT ──
