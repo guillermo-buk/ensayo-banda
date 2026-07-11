@@ -1085,9 +1085,34 @@ function animateTP(){
 }
 
 
+// ── PRESERVAR FORMULARIOS ANTE RE-RENDERS (sync en tiempo real) ──
+function captureFormState(formId,inputIds){
+  const f=document.getElementById(formId);
+  if(!f||f.style.display!=='block')return null;
+  const st={vals:{},active:null,selStart:null,selEnd:null};
+  inputIds.forEach(id=>{const e=document.getElementById(id);if(e)st.vals[id]=e.value;});
+  const ae=document.activeElement;
+  if(ae&&ae.id&&inputIds.includes(ae.id)){
+    st.active=ae.id;
+    try{st.selStart=ae.selectionStart;st.selEnd=ae.selectionEnd;}catch(e){}
+  }
+  return st;
+}
+function restoreFormState(formId,st){
+  if(!st)return;
+  const f=document.getElementById(formId);
+  if(f)f.style.display='block';
+  Object.keys(st.vals).forEach(id=>{const e=document.getElementById(id);if(e)e.value=st.vals[id];});
+  if(st.active){
+    const a=document.getElementById(st.active);
+    if(a){a.focus();try{if(st.selStart!=null)a.setSelectionRange(st.selStart,st.selEnd);}catch(e){}}
+  }
+}
+
 // ── SESIONES ──
 function renderSesiones(){
   const el=document.getElementById('tab-sesiones');
+  const _formState=captureFormState('add-sesion-form',['ns-fecha','ns-titulo','ns-link1','ns-link2','ns-link3','ns-notas']);
   const sorted=[...db.sesiones].sort((a,b)=>(b.fecha||'')>(a.fecha||'')?1:-1);
   let html='';
   if(!sorted.length)html='<div class="empty"><div class="empty-icon">🎙</div>Sin sesiones grabadas.</div>';
@@ -1126,6 +1151,7 @@ function renderSesiones(){
     </div>
   </div>`;
   el.innerHTML=html;
+  restoreFormState('add-sesion-form',_formState);
 }
 function toggleAddSesion(){const el=document.getElementById('add-sesion-form');el.style.display=el.style.display==='none'?'block':'none';if(el.style.display==='block')document.getElementById('ns-fecha').value=new Date().toISOString().split('T')[0];}
 async function saveSesion(){
@@ -1139,6 +1165,7 @@ async function deleteSesion(si){if(!confirm('¿Eliminar?'))return;await supa.fro
 // ── PENDIENTES ──
 function renderPendientes(){
   const el=document.getElementById('tab-pendientes');
+  const _formState=captureFormState('add-pend-form',['np-texto','np-quien']);
   let items='';
   if(!db.pendientes.length)items='<div class="empty" style="padding:2rem 0;"><div class="empty-icon">✅</div>¡Todo al día!</div>';
   db.pendientes.forEach((p,pi)=>{
@@ -1162,6 +1189,7 @@ function renderPendientes(){
       </div>
     </div>
   </div>`;
+  restoreFormState('add-pend-form',_formState);
 }
 function toggleAddPend(){const el=document.getElementById('add-pend-form');el.style.display=el.style.display==='none'?'block':'none';}
 async function togglePend(pi){
